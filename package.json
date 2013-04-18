@@ -1,0 +1,22 @@
+{
+  "name": "NFECT",
+  "version": "0.1.0",
+  "description": "NFECT (Node.js Front-End Construction Tool) allows front-end developers to build output by simply constructing an object that describes which files need to be sent to the client and how. Nock does the heavy lifting of passing files to the client without requiring the developer to learn and use awkward markdown/up or other abstractions. Files described by nfect may also contain plain JavaScript (indicated by <?nfect ?> tags) which will be preprocessed by the Node engine prior to being passed to the client.",
+  "main": "nfect.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/curtiszimmerman/nfect"
+  },
+  "keywords": [
+    "node",
+    "client",
+    "file",
+    "handle",
+    "process"
+  ],
+  "author": "curtis zimmerman",
+  "license": "BSD3"
+}
