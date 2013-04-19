@@ -5,17 +5,7 @@
  */
  
 var nfect = function() {
-  // storage
-  this._nfect = {
-    callback: {},
-    conn: {},
-    error: false,
-    errorMessage: '',
-    files: [],
-    output: [],
-    type: '',
-    version: 'v0.1.0'
-  };
+  this._nfect = {};
   
   /* advanced() handles complex descriptor object instructions */
   this.advanced = function( descriptor, files ) {
@@ -73,12 +63,36 @@ var nfect = function() {
   
   this.data = {};
   
-  this.go = function(connection, descriptor, callback) {
+  this.go = function(descriptor, callback) {
+/*=*************** example descriptor object:*************************
+descriptor = {['head.html','body.html','foot.html'],connection};
+****************** example descriptor object:*************************
+descriptor = {
+  connection: {},
+  files: ['head.html','body.html','foot.html'],
+  fileHandle: {},
+  outputType: 'html'
+};
+****************** example descriptor object:*************************
+descriptor = {
+  connection: {},
+  files: [
+    { name: 'db.js', process: false, type: 'js' },
+    { name: 'results.js', process: true, type: 'js' },
+    { name: 'footer.js', process: false, type: 'js' }
+  ],
+  fileHandle: {},
+  outputType: 'js'
+};
+*********************************************************************/
     //debug1
     console.log('==== [NFECT] ('+_nfect.version+') initialize! ====');
+    init();
     _nfect.type = Object.prototype.toString.call(descriptor);
     if(callback && typeof(callback) == 'function') {
       _nfect.callback = callback;
+    }
+    if(descriptor && descriptor.connection) {
     }
     _nfect.conn = connection;
     //debug2
@@ -93,6 +107,20 @@ var nfect = function() {
       //console.log('*** [NFECT].(go) ROUTING TO [NFECT]->advanced()');
       advanced( descriptor );
     }
+  };
+  
+  // initialize the _nfect object
+  this.init = function() {
+    this._nfect = {
+      callback: {},
+      conn: {},
+      error: false,
+      errorMessage: '',
+      files: [],
+      output: [],
+      type: '',
+      version: 'v0.1.0'
+    };
   };
   
   // this function is used as a callback and then used as callback for chain of file processors
