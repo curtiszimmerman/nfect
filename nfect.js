@@ -64,14 +64,38 @@ var nfect = function() {
   this.data = {};
   
   this.go = function(descriptor, callback) {
-/*=*************** example descriptor object:*************************
-descriptor = {['head.html','body.html','foot.html'],connection};
+/*
+ * nfect.go() USAGE:
+ * nfect.go(descriptor, [connection]);
+ * NOTES: 
+ * -- without connection, nfect returns output as string
+ * -- connection specified, nfect automatically applies these headers:
+ *  'Content-Type': 'text/' + [output type] (default depends on extension)
+ *  'Content-Length': [calculated length of output]
+ *  - status code is specified (default is 200)
+ * -- on error reading ANY file, nfect aborts operation and only outputs 
+ *   information about the error
+ * -- nfect attempts to calculate the output type based on extension and 
+ *   some rudimentary analytics, especially with simplified descriptors
+ * SUGGESTED OPERATION:
+ * -- in array of files, use string-literals to specify vanilla html and 
+ *   provide files you want pre-processed by nfect (with code that is 
+ *   specified with <?nfect and ?> tags, for example) in the array as 
+ *   objects with only the filename specified as a string. see below for 
+ *   example.
+ * -- initialize http.createServer object and specify as second argument 
+ *   to nfect.go function
+****************** example descriptor object:*************************
+descriptor = {['head.html',{'db.js'},'body.html','foot.html']};
+* NOTE: without connection, nfect returns output as string
 ****************** example descriptor object:*************************
 descriptor = {
   connection: {},
   files: ['head.html','body.html','foot.html'],
   fileHandle: {},
-  outputType: 'html'
+  headers: [{'Expires':''}],
+  outputType: 'html',
+  statusCode: 200
 };
 ****************** example descriptor object:*************************
 descriptor = {
@@ -82,7 +106,9 @@ descriptor = {
     { name: 'footer.js', process: false, type: 'js' }
   ],
   fileHandle: {},
-  outputType: 'js'
+  headers: [{'Expires':''}],
+  outputType: 'js',
+  statusCode: 200
 };
 *********************************************************************/
     //debug1
