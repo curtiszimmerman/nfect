@@ -134,7 +134,7 @@ descriptor = {
   };
   
   // initialize the _nfect object
-  this.init = function(descriptor) {
+  this.init = function(descriptor, callback) {
     this._nfect = {
       callback: {},
       conn: {},
@@ -145,6 +145,14 @@ descriptor = {
       type: '',
       version: 'v0.1.0'
     };
+    if(!descriptor) {
+      _nfect.type = 'error';
+      _nfect.error = true;
+      _nfect.errorMessage = 'Syntax Error: Malformed Descriptor';
+    }
+    if(callback && typeof(callback) == 'function') {
+      _nfect.callback = callback;
+    }
     var type = Object.prototype.toString.call(descriptor);
     if(type) {
       if(type === '[object Array]') {
@@ -163,13 +171,8 @@ descriptor = {
       _nfect.error = true;
       _nfect.errorMessage = 'Syntax Error: Malformed Descriptor';
     }
-    if(callback && typeof(callback) == 'function') {
-      _nfect.callback = callback;
-    }
-    if(descriptor) {
-      if(descriptor.connection) {
-        _nfect.conn = connection;
-      }
+    if(descriptor.connection) {
+      _nfect.conn = connection;
     }
   };
   
