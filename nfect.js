@@ -63,7 +63,7 @@ var nfect = function() {
   
   this.data = {};
   
-  this.go = function(descriptor, callback) {
+  this.go = function() {
 /*
  * nfect.go() USAGE:
  * nfect.go(descriptor, [connection]);
@@ -86,7 +86,7 @@ var nfect = function() {
  * -- initialize http.createServer object and specify as second argument 
  *   to nfect.go function
 ********************* example descriptor object:*************************
-descriptor = {['head.html',{'db.js'},'body.html','foot.html'],connection};
+descriptor =/= ['head.html',{'db.js'},'body.html','foot.html'], connection;
 * NOTE: without connection, nfect returns output as string
 ********************* example descriptor object:*************************
 descriptor = {
@@ -114,7 +114,7 @@ descriptor = {
     //debug1
     console.log('==== [NFECT] ('+_nfect.version+') initialize! ====');
     // parse descriptor into _nfect
-    init( descriptor, callback );
+    init( arguments );
     //debug2
     //_nfect.conn.writeHead(200, {'Content-Type': 'text/plain'});
     //_nfect.conn.write('GOSH DARN TEST!');
@@ -145,13 +145,30 @@ descriptor = {
       type: '',
       version: 'v0.1.0'
     };
-    if(!descriptor) {
+    var descriptor = {},
+      callback = {},
+      connection = {},
+      predictedType = '';
+    //parse arguments and behave accordingly
+    if(arguments.length === 1) {
+      descriptor = arguments[0];
+    } else if(arguments.length === 2) {
+      descriptor = arguments[0];
+      var temp = arguments[1];
+      if(typeof(temp) === 'function') {
+        callback = arguments[1];
+      } else if(typeof(temp) === 'object') {
+        connection = arguments[1];
+      } else {
+        _nfect.type = 'error';
+        _nfect.error = true;
+        _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Argument Type';
+      }
+    } else if(arguments.length === 3) {
+    } else {
       _nfect.type = 'error';
       _nfect.error = true;
-      _nfect.errorMessage = 'Syntax Error: Malformed Descriptor';
-    }
-    if(callback && typeof(callback) == 'function') {
-      _nfect.callback = callback;
+      _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Argument Number';
     }
     var type = Object.prototype.toString.call(descriptor);
     if(type) {
@@ -164,15 +181,25 @@ descriptor = {
       } else {
         _nfect.type = 'error';
         _nfect.error = true;
-        _nfect.errorMessage = 'Syntax Error: Malformed Descriptor';
+        _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Improper Type';
       }
     } else {
       _nfect.type = 'error';
       _nfect.error = true;
-      _nfect.errorMessage = 'Syntax Error: Malformed Descriptor';
+      _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Missing';
     }
+    if(!descriptor) {
+      _nfect.type = 'error';
+      _nfect.error = true;
+      _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Missing';
+    }
+    if(callback && typeof(callback) == 'function') {
+      _nfect.callback = callback;
+    }
+    //fix -- properly detect connection
     if(descriptor.connection) {
-      _nfect.conn = connection;
+      _nfect.conn = descriptor.connection;
+    } else {
     }
   };
   

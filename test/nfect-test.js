@@ -12,10 +12,10 @@ var server = http.createServer(function(req, res) {
     // begin nfect test
     console.log('(NFECT-TEST.JS) initializing nfect');
     var nfect = require('../nfect');
-    nfect.go(res, ['./test/testhead.html','./test/testbody.html','./test/testfoot.html']);
+    nfect.go(['./test/testhead.html','./test/testbody.html','./test/testfoot.html'], res);
   } else if(req.url == '/test.js') {
     var nfect = require('../nfect');
-    nfect.go(res, ['./test/test.js']);
+    var output = nfect.go(['./test/test.js']);
   } else {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.write('(NFECT-TEST.JS) req.url['+req.url+']');
