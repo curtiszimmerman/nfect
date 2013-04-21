@@ -85,10 +85,10 @@ var nfect = function() {
  *   example.
  * -- initialize http.createServer object and specify as second argument 
  *   to nfect.go function
-****************** example descriptor object:*************************
-descriptor = {['head.html',{'db.js'},'body.html','foot.html']};
+********************* example descriptor object:*************************
+descriptor = {['head.html',{'db.js'},'body.html','foot.html'],connection};
 * NOTE: without connection, nfect returns output as string
-****************** example descriptor object:*************************
+********************* example descriptor object:*************************
 descriptor = {
   connection: {},
   files: ['head.html','body.html','foot.html'],
@@ -97,7 +97,7 @@ descriptor = {
   outputType: 'html',
   statusCode: 200
 };
-****************** example descriptor object:*************************
+********************* example descriptor object:*************************
 descriptor = {
   connection: {},
   files: [
@@ -107,28 +107,26 @@ descriptor = {
   ],
   fileHandle: {},
   headers: [{'Expires':''}],
-  outputType: 'js',
+  outputType: 'plain',
   statusCode: 200
 };
-*********************************************************************/
+************************************************************************/
     //debug1
     console.log('==== [NFECT] ('+_nfect.version+') initialize! ====');
-    init();
-    _nfect.type = Object.prototype.toString.call(descriptor);
-    if(callback && typeof(callback) == 'function') {
-      _nfect.callback = callback;
-    }
-    if(descriptor && descriptor.connection) {
-    }
-    _nfect.conn = connection;
+    // parse descriptor into _nfect
+    init( descriptor, callback );
     //debug2
     //_nfect.conn.writeHead(200, {'Content-Type': 'text/plain'});
     //_nfect.conn.write('GOSH DARN TEST!');
-    if(_nfect.type === '[object Array]') {
+    if(_nfect.type === 'array') {
       //debug1
       //console.log('*** [NFECT].(go) ROUTING TO [NFECT]->basic()');
       basic( descriptor );
-    } else {
+    } else if(_nfect.type === 'string') {
+      //debug1
+      //console.log('*** [NFECT].(go) ROUTING TO [NFECT]->basic()');
+      basic( descriptor );
+    } else if(_nfect.type === 'object') {
       //debug1
       //console.log('*** [NFECT].(go) ROUTING TO [NFECT]->advanced()');
       advanced( descriptor );
@@ -136,7 +134,7 @@ descriptor = {
   };
   
   // initialize the _nfect object
-  this.init = function() {
+  this.init = function(descriptor) {
     this._nfect = {
       callback: {},
       conn: {},
@@ -147,9 +145,36 @@ descriptor = {
       type: '',
       version: 'v0.1.0'
     };
+    var type = Object.prototype.toString.call(descriptor);
+    if(type) {
+      if(type === '[object Array]') {
+        _nfect.type = 'array';
+      } else if(type === '[object Object]') {
+        _nfect.type = 'object';
+      } else if(type === '[object String]') {
+        _nfect.type = 'string';
+      } else {
+        _nfect.type = 'error';
+        _nfect.error = true;
+        _nfect.errorMessage = 'Syntax Error: Malformed Descriptor';
+      }
+    } else {
+      _nfect.type = 'error';
+      _nfect.error = true;
+      _nfect.errorMessage = 'Syntax Error: Malformed Descriptor';
+    }
+    if(callback && typeof(callback) == 'function') {
+      _nfect.callback = callback;
+    }
+    if(descriptor) {
+      if(descriptor.connection) {
+        _nfect.conn = connection;
+      }
+    }
   };
   
-  // this function is used as a callback and then used as callback for chain of file processors
+  //todo set up eventemitter for .on('error')
+  //todo return output instead of writing output to connection
   this.out = function() {
     //debug1
     //console.log('*** [NFECT].(out).start!');
@@ -175,4 +200,7 @@ descriptor = {
 }();
 
 /* export module functions */
-module.exports = { go:nfect.go };
+module.exports = {
+  data: nfect.data,
+  go: nfect.go
+};
