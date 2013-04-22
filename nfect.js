@@ -134,6 +134,7 @@ descriptor = {
   };
   
   // initialize the _nfect object
+  //FIX GOOD GOD GET RID OF THIS ERROR-ASSIGNING MONSTROSITY
   this.init = function(descriptor, callback) {
     this._nfect = {
       callback: {},
