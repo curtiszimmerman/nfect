@@ -154,10 +154,9 @@ descriptor = {
       descriptor = arguments[0];
     } else if(arguments.length === 2) {
       descriptor = arguments[0];
-      var temp = arguments[1];
-      if(typeof(temp) === 'function') {
+      if(typeof(arguments[1]) === 'function') {
         callback = arguments[1];
-      } else if(typeof(temp) === 'object') {
+      } else if(typeof(arguments[1]) === 'object') {
         connection = arguments[1];
       } else {
         _nfect.type = 'error';
@@ -165,6 +164,21 @@ descriptor = {
         _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Argument Type';
       }
     } else if(arguments.length === 3) {
+      descriptor = arguments[0];
+      if(typeof(arguments[1]) === 'object') {
+        connection = arguments[1];
+      } else {
+        _nfect.type = 'error';
+        _nfect.error = true;
+        _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Argument Type';
+      }
+      if(typeof(arguments[2]) === 'function') {
+        callback = arguments[2];
+      } else {
+        _nfect.type = 'error';
+        _nfect.error = true;
+        _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Argument Type';
+      }
     } else {
       _nfect.type = 'error';
       _nfect.error = true;
