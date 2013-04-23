@@ -65,8 +65,20 @@ var nfect = function() {
   
   this.go = function() {
 /*
- * nfect.go() USAGE:
- * nfect.go(descriptor, [connection]);
+ * var outputString = nfect.go( <string input> );
+ * var outputString = nfect.go( <string input>, function callback() );
+ * nfect.go( <string input>, {object connection} );
+ * var outputString = nfect.go( [array inputFiles] );
+ * var outputString = nfect.go( {object descriptor} );
+ * EXAMPLES:
+ * var output = nfect.go( 'file.html' );
+ * var output = nfect.go( 'file.html', callback() );
+ * var output = nfect.go( {descriptor} );
+ * nfect.go( 'file.html', {connection} );
+ * nfect.go( ['file.html'], {connection} );
+ * nfect.go( ['file1.html', 'file2.html'], {connection} );
+ * nfect.go( {descriptor}, {connection} );
+ * nfect.go( {descriptor}, {connection}, callback() );
  * NOTES: 
  * -- without connection, nfect returns output as string
  * -- connection specified, nfect automatically applies these headers:
@@ -86,7 +98,7 @@ var nfect = function() {
  * -- initialize http.createServer object and specify as second argument 
  *   to nfect.go function
 ********************* example descriptor object:*************************
-descriptor =/= ['head.html',{'db.js'},'body.html','foot.html'], connection;
+* example: ['head.html',{'db.js'},'body.html','foot.html'], connection;
 * NOTE: without connection, nfect returns output as string
 ********************* example descriptor object:*************************
 descriptor = {
@@ -115,9 +127,6 @@ descriptor = {
     console.log('==== [NFECT] ('+_nfect.version+') initialize! ====');
     // parse descriptor into _nfect
     init( arguments );
-    //debug2
-    //_nfect.conn.writeHead(200, {'Content-Type': 'text/plain'});
-    //_nfect.conn.write('GOSH DARN TEST!');
     if(_nfect.type === 'array') {
       //debug1
       //console.log('*** [NFECT].(go) ROUTING TO [NFECT]->basic()');
@@ -134,26 +143,29 @@ descriptor = {
   };
   
   // initialize the _nfect object
-  //FIX GOOD GOD GET RID OF THIS ERROR-ASSIGNING MONSTROSITY
+  //FIX -- GOOD GOD GET RID OF THIS ERROR-ASSIGNING MONSTROSITY
   this.init = function(descriptor, callback) {
     this._nfect = {
+      args: 0,
       callback: {},
       conn: {},
       error: false,
       errorMessage: '',
       files: [],
-      output: [],
+      initialized: false,
+      output: false,
       type: '',
       version: 'v0.1.0'
     };
-    var descriptor = {},
+    var argsLength = arguments.length,
+      descriptor = {},
       callback = {},
-      connection = {},
-      predictedType = '';
+      connection = {};
+    _nfect.args = argsLength;
     //parse arguments and behave accordingly
-    if(arguments.length === 1) {
+    if(argsLength === 1) {
       descriptor = arguments[0];
-    } else if(arguments.length === 2) {
+    } else if(argsLength === 2) {
       descriptor = arguments[0];
       if(typeof(arguments[1]) === 'function') {
         callback = arguments[1];
@@ -164,17 +176,14 @@ descriptor = {
         _nfect.error = true;
         _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Argument Type';
       }
-    } else if(arguments.length === 3) {
+    } else if(argsLength === 3) {
       descriptor = arguments[0];
-      if(typeof(arguments[1]) === 'object') {
+      if(typeof(arguments[1]) === 'object' && typeof(arguments[2]) === 'function') {
         connection = arguments[1];
-      } else {
-        _nfect.type = 'error';
-        _nfect.error = true;
-        _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Argument Type';
-      }
-      if(typeof(arguments[2]) === 'function') {
         callback = arguments[2];
+      } else if(typeof(arguments[1]) === 'function' && typeof(arguments[1]) === 'object') {
+        callback = arguments[1];
+        connection = arguments[2];
       } else {
         _nfect.type = 'error';
         _nfect.error = true;
@@ -203,19 +212,16 @@ descriptor = {
       _nfect.error = true;
       _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Missing';
     }
-    if(!descriptor) {
-      _nfect.type = 'error';
-      _nfect.error = true;
-      _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Missing';
-    }
     if(callback && typeof(callback) == 'function') {
       _nfect.callback = callback;
     }
     //fix -- properly detect connection
-    if(descriptor.connection) {
-      _nfect.conn = descriptor.connection;
+    if(connection && typeof(connection) == 'object') {
+      _nfect.conn = connection;
     } else {
+      _nfect.output = true;
     }
+    _nfect.initialized = true;
   };
   
   //todo set up eventemitter for .on('error')
