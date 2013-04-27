@@ -4,66 +4,6 @@
  *  nfect outputs it properly to the client
  */
  
-var nfect = function() {
-  this._nfect = {};
-  
-  /* advanced() handles complex descriptor object instructions */
-  this.advanced = function( descriptor, files ) {
-    //debug2
-    console.log('[NFECT].(advanced).start!');
-    console.log('============== WARNING =================');
-    console.log('[NFECT].(advanced) IS NOT IMPLEMENTED!');
-    //debug start
-    for(var file in files) {
-      if(files.hasOwnProperty(file)) {
-        console.log('[NFECT].(advanced).descriptor.prop:['+prop+']');
-      }
-    }
-    //debug end
-    if(files.length == 0) {
-      //debug1
-      //console.log('*** [NFECT].(advanced) END CONNECTION');
-      _nfect.conn.end();
-      if(out && typeof(out) == 'function') {
-        out();
-      }
-    } else {
-      advanced( descriptor, files.shift() );
-    }
-  };
-  
-  this.basic = function( files ) {
-    //debug1
-    //console.log('[NFECT].(basic).start!');
-    if(files.length == 0) {
-      //debug1
-      //console.log('*** [NFECT].(basic) END CONNECTION');
-      if(out && typeof(out) == 'function') {
-        out();
-      }
-    } else {
-      var nextFile = files.shift();
-      //debug1
-      //console.log('*** [NFECT].(basic) BEGIN DUMP OF FILE:['+nextFile+']');
-      var fs = require('fs');
-      fs.readFile(nextFile, 'utf8', function(err, contents) {
-        //debug1
-        //console.log('*** [NFECT].(basic) CONTENTS OF FILE:['+contents+']');
-        if(err) {
-          _nfect.error = true;
-          _nfect.errorMessage = err;
-          return;
-        } else {
-          _nfect.output.push( contents );
-        }
-        basic( files );
-      });
-    }
-  };
-  
-  this.data = {};
-  
-  this.go = function() {
 /*
  * var outputString = nfect.go( <string input> );
  * var outputString = nfect.go( <string input>, function callback() );
@@ -106,8 +46,8 @@ descriptor = {
   files: ['head.html','body.html','foot.html'],
   fileHandle: {},
   headers: [{'Expires':''}],
-  outputType: 'html',
-  statusCode: 200
+  output: 'html',
+  status: 200
 };
 ********************* example descriptor object:*************************
 descriptor = {
@@ -119,41 +59,103 @@ descriptor = {
   ],
   fileHandle: {},
   headers: [{'Expires':''}],
-  outputType: 'plain',
-  statusCode: 200
+  output: 'plain',
+  status: 200
 };
 ************************************************************************/
-    //debug1
-    console.log('==== [NFECT] ('+_nfect.version+') initialize! ====');
-    // parse descriptor into _nfect
-    init( arguments );
-    if(_nfect.type === 'array') {
+ 
+var nfect = (function() {
+  //debug1 -- proof positive that your setup is bullshit
+  console.log('======> nfect() this['+this+'] typeof(this)['+typeof(this)+']');
+
+  _nfect = {
+    args: 0,
+    callback: {},
+    conn: {},
+    descriptor: {},
+    error: false,
+    errorMessage: '',
+    files: [],
+    initialized: false,
+    output: false,
+    outputText: '',
+    process: 'basic',
+    type: '',
+    version: 'v0.1.1'
+  };
+  
+  /* advanced() handles complex descriptor object instructions */
+  function advanced() {
+    //debug2
+    console.log('[NFECT].(advanced).start!');
+    console.log('============== WARNING =================');
+    console.log('[NFECT].(advanced) IS NOT IMPLEMENTED!');
+    //debug start
+    for(var file in files) {
+      if(files.hasOwnProperty(file)) {
+        console.log('[NFECT].(advanced).descriptor.prop:['+prop+']');
+      }
+    }
+    //debug end
+    if(files.length == 0) {
       //debug1
-      //console.log('*** [NFECT].(go) ROUTING TO [NFECT]->basic()');
-      basic( descriptor );
-    } else if(_nfect.type === 'string') {
-      //debug1
-      //console.log('*** [NFECT].(go) ROUTING TO [NFECT]->basic()');
-      basic( descriptor );
-    } else if(_nfect.type === 'object') {
-      //debug1
-      //console.log('*** [NFECT].(go) ROUTING TO [NFECT]->advanced()');
-      advanced( descriptor );
+      //console.log('*** [NFECT].(advanced) END CONNECTION');
+      _nfect.conn.end();
+      if(out && typeof(out) == 'function') {
+        out();
+      }
+    } else {
+      advanced( descriptor, files.shift() );
     }
   };
   
+  function basic() {
+    var filesLength = _nfect.files.length;
+    for(var i=0; i<filesLength; i++) {
+      //debug1
+      console.log('-=-=-=-=-=-=-=- i['+i+'] files[i]:['+_nfect.files[i]+']');
+      var nextFile = _nfect.files[i],
+        fs = require('fs');
+      //debug1
+      console.log('*** [NFECT].(basic) fs?['+fs+']');
+      fs.readFile(nextFile, 'utf8', function(err, contents) {
+        //debug1
+        console.log('*** [NFECT].(basic) CONTENTS OF FILE:['+contents+']');
+        if(err) {
+          _nfect.error = true;
+          _nfect.errorMessage = err;
+          return;
+        } else {
+          //debug1
+          console.log('*** [NFECT].(basic) BEGIN DUMP OF FILE:['+contents+']');
+          _nfect.outputText = _nfect.outputText + contents;
+        }
+      });
+    }
+    if(out && typeof(out) == 'function') {
+      out();
+    }
+  };
+  
+  // data subobject is how we encapsulate and transport data to files
+  var data = { };
+  
   // initialize the _nfect object
   //FIX -- GOOD GOD GET RID OF THIS ERROR-ASSIGNING MONSTROSITY
-  this.init = function(descriptor, callback) {
-    this._nfect = {
+  function init(arguments) {
+    //debug1 -- proof positive that your setup is bullshit
+    console.log('======> nfect.init() this['+this+'] typeof(this)['+typeof(this)+']');
+    _nfect = {
       args: 0,
       callback: {},
       conn: {},
+      descriptor: {},
       error: false,
       errorMessage: '',
       files: [],
       initialized: false,
       output: false,
+      process: 'basic',
       type: '',
       version: 'v0.1.0'
     };
@@ -198,10 +200,13 @@ descriptor = {
     if(type) {
       if(type === '[object Array]') {
         _nfect.type = 'array';
+        _nfect.files = descriptor;
       } else if(type === '[object Object]') {
         _nfect.type = 'object';
+        parse();
       } else if(type === '[object String]') {
         _nfect.type = 'string';
+        _nfect.files.push = descriptor;
       } else {
         _nfect.type = 'error';
         _nfect.error = true;
@@ -226,7 +231,7 @@ descriptor = {
   
   //todo set up eventemitter for .on('error')
   //todo return output instead of writing output to connection
-  this.out = function() {
+  function out() {
     //debug1
     //console.log('*** [NFECT].(out).start!');
     if(_nfect.error) {
@@ -234,24 +239,43 @@ descriptor = {
       _nfect.conn.write('Error opening file: '+_nfect.errorMessage);
       _nfect.conn.end();
     } else {
-      var outlen = _nfect.output.length;
-      var body = _nfect.output.join('');
-      //debug1
-      //console.log('*** [NFECT].(out).writing!:['+body+']');
-      _nfect.conn.writeHead(200, { 'Content-Length': body.length, 'Content-Type': 'text/html' });
-      _nfect.conn.write(body);
-      _nfect.conn.end();
+      if(_nfect.output === true) {
+        return _nfect.outputText;
+      } else {
+        //debug1
+        //console.log('*** [NFECT].(out).writing!:['+body+']');
+        _nfect.conn.writeHead(200, { 'Content-Length': _nfect.outputText.length, 'Content-Type': 'text/html' });
+        _nfect.conn.write(body);
+        _nfect.conn.end();
+      }
     }
   };
   
+  function parse(descriptor) {
+    if(descriptor.files && descriptor.files.length > 0) {
+      _nfect.files = descriptor.files;
+    } else {
+    }
+  };
+  
+  function nfect() {
+    //debug1
+    console.log('==== [NFECT] ('+_nfect.version+') initialize! ====');
+    // parse descriptor into _nfect
+    init(arguments);
+    if(_nfect.type === 'array' || _nfect.type === 'string') {
+      basic();
+    } else if(_nfect.type === 'object') {
+      advanced();
+    }
+  };
+  
+  //return nfect
   return {
     data: data,
-    go: go
-  }
-}();
+    nfect: nfect
+  };
+}());
 
 /* export module functions */
-module.exports = {
-  data: nfect.data,
-  go: nfect.go
-};
+module.exports = nfect.nfect;
