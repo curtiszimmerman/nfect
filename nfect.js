@@ -65,8 +65,6 @@ descriptor = {
 ************************************************************************/
  
 var nfect = (function() {
-  //debug1 -- proof positive that your setup is bullshit
-  console.log('======> nfect() this['+this+'] typeof(this)['+typeof(this)+']');
 
   _nfect = {
     args: 0,
@@ -75,16 +73,31 @@ var nfect = (function() {
     descriptor: {},
     error: false,
     errorMessage: '',
+    errorNumber: 0,
     files: [],
     initialized: false,
     output: false,
-    outputText: '',
+    outputText: [],
     process: 'basic',
     type: '',
     version: 'v0.1.1'
   };
+    
+  //required modules
+  var EventEmitter = require('events').EventEmitter;
+  var fs = require('fs');
+  //init error eventemitter
+  var errorEvent = new EventEmitter();
+  errorEvent.on('error', function(num, msg) {
+    _nfect.type = 'error';
+    _nfect.error = true;
+    _nfect.errorNumber = num;
+    _nfect.errorMessage = msg;
+    error();
+  });
   
   /* advanced() handles complex descriptor object instructions */
+  // FIX DEAR GOD FIX this to handle Other Things
   function advanced() {
     //debug2
     console.log('[NFECT].(advanced).start!');
@@ -109,42 +122,68 @@ var nfect = (function() {
     }
   };
   
+  //todo set up eventemitter for fileRead.complete() to trigger out()
   function basic() {
-    var filesLength = _nfect.files.length;
-    for(var i=0; i<filesLength; i++) {
+    var filesLength = _nfect.files.length,
+      filesRead = 0;
+    //debug1
+    console.log('[NFECT] ONEONEONE-=-=-=-=-=-=-=- filesLength['+filesLength+'] filesRead:['+filesRead+']');
+    //init readfiles eventemitter 
+    var fileEvent = new EventEmitter();
+    fileEvent.on('readfile', function() {
       //debug1
-      console.log('-=-=-=-=-=-=-=- i['+i+'] files[i]:['+_nfect.files[i]+']');
-      var nextFile = _nfect.files[i],
-        fs = require('fs');
+      console.log('[NFECT] TWOTWOTWO-=-=-=-=-=-=-=- filesLength['+filesLength+'] filesRead:['+filesRead+']');
+      //if all of our files have been read in, launch output handler
+      filesRead++;
+      if(filesRead === filesLength) {
+        if(out && typeof(out) == 'function') { out(); }
+      }
+    });
+    //decrement towards zero is faster and will evaluate to true when i==0
+    for(var i=filesLength; i--;) {
       //debug1
-      console.log('*** [NFECT].(basic) fs?['+fs+']');
+      console.log('000 [NFECT] -=-=-=-=-=-=-=- i['+i+'] files[i]:['+_nfect.files[i]+']');
+      var nextFile = _nfect.files[i];
+      //debug1
+      console.log('000 [NFECT].(basic) fs?['+fs+']');
+      //FIX -- these are going to be put onto the stack and potentially 
+      //taken off in some random order. you need to push onto an array 
+      //to preserve the order intended by client
       fs.readFile(nextFile, 'utf8', function(err, contents) {
         //debug1
-        console.log('*** [NFECT].(basic) CONTENTS OF FILE:['+contents+']');
+        console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
         if(err) {
-          _nfect.error = true;
-          _nfect.errorMessage = err;
+          errorEvent.emit('error',1,'File Read Error: ['+err+']');
           return;
         } else {
           //debug1
-          console.log('*** [NFECT].(basic) BEGIN DUMP OF FILE:['+contents+']');
-          _nfect.outputText = _nfect.outputText + contents;
+          console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+i+']');
+          _nfect.outputText.push(contents);
+          //increment output handler
+          fileEvent.emit('readfile');
         }
       });
-    }
-    if(out && typeof(out) == 'function') {
-      out();
     }
   };
   
   // data subobject is how we encapsulate and transport data to files
   var data = { };
   
+  // handle error event emission
+  function error() {
+    if(_nfect.conn && typeof(_nfect.conn) === 'object' && !isEmpty(_nfect.conn)) {
+      _nfect.conn.writeHead(500, { 'Content-Type': 'text/plain' });
+      _nfect.conn.write('Error: '+_nfect.errorMessage);
+      _nfect.conn.end();
+    } else {
+      return 'Error '+_nfect.errorNumber+': '+_nfect.errorMessage;
+    }
+  };
+  
   // initialize the _nfect object
-  //FIX -- GOOD GOD GET RID OF THIS ERROR-ASSIGNING MONSTROSITY
   function init(arguments) {
-    //debug1 -- proof positive that your setup is bullshit
-    console.log('======> nfect.init() this['+this+'] typeof(this)['+typeof(this)+']');
+    //debug1 -- find a way to bind this properly if needed
+    console.log('[NFECT] ======> nfect.init() this['+this+'] typeof(this)['+typeof(this)+']');
     _nfect = {
       args: 0,
       callback: {},
@@ -165,57 +204,59 @@ var nfect = (function() {
       connection = {};
     _nfect.args = argsLength;
     //parse arguments and behave accordingly
-    if(argsLength === 1) {
-      descriptor = arguments[0];
-    } else if(argsLength === 2) {
-      descriptor = arguments[0];
-      if(typeof(arguments[1]) === 'function') {
-        callback = arguments[1];
-      } else if(typeof(arguments[1]) === 'object') {
-        connection = arguments[1];
-      } else {
-        _nfect.type = 'error';
-        _nfect.error = true;
-        _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Argument Type';
-      }
-    } else if(argsLength === 3) {
-      descriptor = arguments[0];
-      if(typeof(arguments[1]) === 'object' && typeof(arguments[2]) === 'function') {
-        connection = arguments[1];
-        callback = arguments[2];
-      } else if(typeof(arguments[1]) === 'function' && typeof(arguments[1]) === 'object') {
-        callback = arguments[1];
-        connection = arguments[2];
-      } else {
-        _nfect.type = 'error';
-        _nfect.error = true;
-        _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Argument Type';
-      }
-    } else {
-      _nfect.type = 'error';
-      _nfect.error = true;
-      _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Argument Number';
+    switch(argsLength) {
+      case 1:
+        descriptor = arguments[0];
+        break;
+      case 2:
+        descriptor = arguments[0];
+        if(typeof(arguments[1]) === 'function') {
+          callback = arguments[1];
+        } else if(typeof(arguments[1]) === 'object') {
+          connection = arguments[1];
+        } else {
+          errorEvent.emit('error',2,'Syntax Error: Malformed Descriptor: Argument Type');
+          return;
+        }
+        break;
+      case 3:
+        descriptor = arguments[0];
+        if(typeof(arguments[1]) === 'object' && typeof(arguments[2]) === 'function') {
+          connection = arguments[1];
+          callback = arguments[2];
+        } else if(typeof(arguments[1]) === 'function' && typeof(arguments[1]) === 'object') {
+          callback = arguments[1];
+          connection = arguments[2];
+        } else {
+          errorEvent.emit('error',3,'Syntax Error: Malformed Descriptor: Argument Type');
+          return;
+        }
+        break;
+      default:
+        errorEvent.emit('error',4,'Syntax Error: Malformed Descriptor: Argument Number');
+        return;
+    }
+    if(!descriptor) {
+      errorEvent.emit('error',5,'Syntax Error: Malformed Descriptor: Missing');
+      return;
     }
     var type = Object.prototype.toString.call(descriptor);
-    if(type) {
-      if(type === '[object Array]') {
+    switch(type) {
+      case '[object Array]':
         _nfect.type = 'array';
         _nfect.files = descriptor;
-      } else if(type === '[object Object]') {
+        break;
+      case '[object Object]':
         _nfect.type = 'object';
         parse();
-      } else if(type === '[object String]') {
+        break;
+      case '[object String]':
         _nfect.type = 'string';
         _nfect.files.push = descriptor;
-      } else {
-        _nfect.type = 'error';
-        _nfect.error = true;
-        _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Improper Type';
-      }
-    } else {
-      _nfect.type = 'error';
-      _nfect.error = true;
-      _nfect.errorMessage = 'Syntax Error: Malformed Descriptor: Missing';
+        break;
+      default:
+        errorEvent.emit('error',6,'Syntax Error: Malformed Descriptor: Improper Type');
+        return;
     }
     if(callback && typeof(callback) == 'function') {
       _nfect.callback = callback;
@@ -229,32 +270,43 @@ var nfect = (function() {
     _nfect.initialized = true;
   };
   
-  //todo set up eventemitter for .on('error')
+  //utility function for determining emptiness of object
+  function isEmpty(obj) {
+    for(var prop in obj) {
+      if(obj.hasOwnProperty(prop)) return false;
+    }
+    return true;
+  };
+  
   //todo return output instead of writing output to connection
   function out() {
     //debug1
     //console.log('*** [NFECT].(out).start!');
-    if(_nfect.error) {
-      _nfect.conn.writeHead(500, { 'Content-Type': 'text/plain' });
-      _nfect.conn.write('Error opening file: '+_nfect.errorMessage);
-      _nfect.conn.end();
+    //debug1
+    console.log('*** [NFECT].(out).writing!:['+_nfect.outputText+']');
+    //fix -- this needs to be properly constructed first
+    var outputTextLength = _nfect.outputText.length;
+    if(_nfect.output === true) {
+      //fix -- this needs to return outputText.join('') or something
+      return _nfect.outputText;
     } else {
-      if(_nfect.output === true) {
-        return _nfect.outputText;
-      } else {
-        //debug1
-        //console.log('*** [NFECT].(out).writing!:['+body+']');
-        _nfect.conn.writeHead(200, { 'Content-Length': _nfect.outputText.length, 'Content-Type': 'text/html' });
-        _nfect.conn.write(body);
-        _nfect.conn.end();
-      }
+      //debug1
+      //console.log('*** [NFECT].(out).writing!:['+_nfect.outputText+']');
+      //fix -- this needs to reflect true size of output text
+      _nfect.conn.writeHead(200, { 'Content-Length': outputTextLength, 'Content-Type': 'text/html' });
+      _nfect.conn.write(body);
+      _nfect.conn.end();
     }
   };
   
   function parse(descriptor) {
-    if(descriptor.files && descriptor.files.length > 0) {
+    if(!isEmpty(descriptor) && descriptor.files && descriptor.files.length > 0) {
       _nfect.files = descriptor.files;
     } else {
+      //debug1
+      console.log('[NFECT].parse() ====> right befoar errorEvent.emit()');
+      errorEvent.emit('error',7,'Syntax Error: Descriptor Empty');
+      return;
     }
   };
   
