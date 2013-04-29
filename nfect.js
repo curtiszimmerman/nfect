@@ -114,16 +114,16 @@ var nfect = (function() {
   function basic() {
     var filesLength = _nfect.files.length,
       filesRead = 0;
-    //debug1
-    console.log('[NFECT] ONEONEONE-=-=-=-=-=-=-=- filesLength['+filesLength+'] filesRead:['+filesRead+']');
+//debug1
+console.log('[NFECT] ONEONEONE-=-=-=-=-=-=-=- filesLength['+filesLength+'] filesRead:['+filesRead+']');
     //init readfiles eventemitter 
     var fileEvent = new EventEmitter();
     fileEvent.on('readfile', function() {
-      //debug1
-      console.log('[NFECT] TWOTWOTWO-=-=-=-=-=-=-=- filesLength['+filesLength+'] filesRead:['+filesRead+']');
+//debug1
+console.log('[NFECT] TWOTWOTWO-=-=-=-=-=-=-=- filesLength['+filesLength+'] filesRead:['+filesRead+']');
       //if all of our files have been read in, launch output handler
       filesRead++;
-      if(filesRead === filesLength) {
+      if(filesRead >= filesLength) {
         if(out && typeof(out) == 'function') { out(); }
       }
     });
@@ -137,7 +137,7 @@ console.log('000 [NFECT].(basic) nextFile:['+nextFile+']');
       //FIX -- these are going to be put onto the stack and potentially 
       //taken off in some random order. you need to push onto an array 
       //to preserve the order intended by client
-      fs.readFile(nextFile, 'utf8', function(err, contents) {
+      var bytesRead = fs.readFile(nextFile, 'utf8', function(err, contents) {
 //debug1
 console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
         if(err) {
@@ -151,6 +151,8 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+i+']');
           fileEvent.emit('readfile');
         }
       });
+//debug1
+console.log('000 [NFECT].(basic) +++ outputText?['+_nfect.outputText.join('')+'] bytesRead:['+bytesRead+']');
     }
   };
   
