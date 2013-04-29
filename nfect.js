@@ -74,8 +74,12 @@ var nfect = (function() {
   //required modules
   var EventEmitter = require('events').EventEmitter;
   var fs = require('fs');
-  //init error eventemitter
+  // error eventemitter (obviously)
   var errorEvent = new EventEmitter();
+  // object initialized eventemitter
+  var initEvent = new EventEmitter();
+  // object parsed eventemitter
+  var parseEvent = new EventEmitter();
   errorEvent.on('error', function(num, msg) {
     _nfect.type = 'error';
     _nfect.error = true;
@@ -83,6 +87,47 @@ var nfect = (function() {
     _nfect.errorMessage = msg;
     error();
   });
+  
+  // pub/sub/unsub pattern utility functions
+  var pubsub = (function() {
+    // pub/sub/unsub pattern cache
+    var cache = { };
+    function _pub(topic, args, scope) {
+      if(cache[topic]) {
+        var currentTopic = cache[topic],
+          topicLength = currentTopic.length;
+        for(var i=0; i<topicLength; i++) {
+          currentTopic[i].apply(scope || this, args || []);
+        }
+      }
+    };
+    function _sub(topic, callback) {
+      if(!cache[topic]) {
+        cache[topic] = [];
+      }
+      cache[topic].push(callback);
+      return [topic, callback];
+    };
+    function _unsub(handle, total) {
+      var topic = handle[0],
+        cacheLength = cache[topic].length;
+      if(cache[topic]) {
+        for(var i=0; i<cacheLength; i++) {
+          if(cache[topic][i] === handle) {
+            cache[topic].splice(cache[topic][i], 1);
+            if(total) {
+              delete cache[topic];
+            }
+          }
+        }
+      }
+    };
+    return {
+      pub:_pub,
+      sub:_sub,
+      unsub:_unsub
+    };
+  }());
   
   /* advanced() handles complex descriptor object instructions */
   // FIX DEAR GOD FIX this to handle Other Things
@@ -259,6 +304,8 @@ console.log('000 [NFECT].(basic) +++ outputText?['+_nfect.outputText.join('')+']
       _nfect.output = true;
     }
     _nfect.initialized = true;
+    // trigger initialized event handler
+    initEvent.emit('init');
   };
   
   //utility function for determining emptiness of object
@@ -297,13 +344,21 @@ console.log('000 [NFECT].(basic) +++ outputText?['+_nfect.outputText.join('')+']
   };
   
   function nfect() {
+  /* **** pub/sub/unsub order of execution:
+   * var initialize = _sub("/nfect/initialized", function() {
+   * });
+    initEvent.on('init', function() {
+      if(_nfect.type === 'array' || _nfect.type === 'string') {
+        basic();
+      } else if(_nfect.type === 'object') {
+        advanced();
+      }
+    });
+    parseEvent.on('parse', function() {
+    });  
     form();
     init(arguments);
-    if(_nfect.type === 'array' || _nfect.type === 'string') {
-      basic();
-    } else if(_nfect.type === 'object') {
-      advanced();
-    }
+    return;
   };
   
   //return nfect

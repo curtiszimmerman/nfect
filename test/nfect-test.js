@@ -23,7 +23,7 @@ var server = http.createServer(function(req, res) {
     nfect(['./test/test.js'], res);
   } else if(req.url == '/test2.js') {
     var nfect = require('../nfect');
-    var output = nfect(['./test/test.js']);
+    var output = nfect(['./test/test2.js']);
 //debug1
 console.log('[NFECT-TEST.JS].req.url == test.js output:['+output+']');
     res.writeHead(200, { 'Content-Type': 'text/plain' });
