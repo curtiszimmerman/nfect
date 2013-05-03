@@ -9,17 +9,11 @@ var server = http.createServer(function(req, res) {
   console.log('(NFECT-TEST.JS) [client '+req.connection.remoteAddress+':'+req.connection.remotePort+' initiated connection]');
   if(req.url == '/') {
     console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
-    // begin nfect test
-    console.log('(NFECT-TEST.JS) requiring/initializing nfect()');
     var nfect = require('../nfect');
-    console.log('(NFECT-TEST.JS) calling nfect()!');
     nfect(['./test/testhead.html','./test/testbody.html','./test/testfoot.html'], res);
   } else if(req.url == '/test.js') {
     console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
-    // begin nfect test
-    console.log('(NFECT-TEST.JS) requiring/initializing nfect()');
     var nfect = require('../nfect');
-    console.log('(NFECT-TEST.JS) calling nfect()!');
     nfect(['./test/test.js'], res);
   } else if(req.url == '/test2.js') {
     var nfect = require('../nfect');
