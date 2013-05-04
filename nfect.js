@@ -72,24 +72,10 @@ var nfect = (function() {
   var data = { };
     
   //required modules
-  var EventEmitter = require('events').EventEmitter;
   var fs = require('fs');
-  // error eventemitter (obviously)
-  var errorEvent = new EventEmitter();
-  // object initialized eventemitter
-  var initEvent = new EventEmitter();
-  // object parsed eventemitter
-  var parseEvent = new EventEmitter();
-  errorEvent.on('error', function(num, msg) {
-    _nfect.type = 'error';
-    _nfect.error = true;
-    _nfect.errorNumber = num;
-    _nfect.errorMessage = msg;
-    error();
-  });
   
   // pub/sub/unsub pattern utility functions
-  var pubsub = (function() {
+  var _pubsub = (function() {
     // pub/sub/unsub pattern cache
     var cache = { };
     function _pub(topic, args, scope) {
@@ -100,6 +86,9 @@ var nfect = (function() {
           currentTopic[i].apply(scope || this, args || []);
         }
       }
+    };
+    function _reset() {
+      cache = { };
     };
     function _sub(topic, callback) {
       if(!cache[topic]) {
@@ -124,6 +113,7 @@ var nfect = (function() {
     };
     return {
       pub:_pub,
+      reset:_reset,
       sub:_sub,
       unsub:_unsub
     };
@@ -131,7 +121,7 @@ var nfect = (function() {
   
   /* advanced() handles complex descriptor object instructions */
   // FIX DEAR GOD FIX this to handle Other Things
-  function advanced() {
+  function _advanced() {
     //debug3
     console.log('[NFECT].(advanced).start!');
     console.log('============== WARNING =================');
@@ -147,28 +137,33 @@ var nfect = (function() {
       //debug1
       //console.log('*** [NFECT].(advanced) END CONNECTION');
       _nfect.conn.end();
-      if(out && typeof(out) == 'function') {
-        out();
+      if(_out && typeof(_out) == 'function') {
+        _out();
       }
     } else {
-      advanced( descriptor, files.shift() );
+      _advanced( descriptor, files.shift() );
     }
   };
   
   //todo set up eventemitter for fileRead.complete() to trigger out()
-  function basic() {
+  function _basic() {
     var filesLength = _nfect.files.length,
       filesRead = 0;
     var contentStorage = [];
-    var fileHandle = pubsub.sub('/nfect/input/file', function(position, content) {
+    var fileHandle = _pubsub.sub('/nfect/input/file', function(position, content) {
       filesRead++;
+//debug1
+console.log('filesRead:['+filesRead+']');
       contentStorage[position] = content;
       // preserve input file order
       if(filesRead === filesLength) {
         for(var i=0; i<filesLength; i++) {
-          _nfect.output.content.push(contentStorage[i]);
+          (function(num) {
+            _nfect.output.content.push(contentStorage[num]);
+          }(i));
         }
-        pubsub.pub('/nfect/processed');
+        _pubsub.pub('/nfect/processed');
+        return;
       }
     });
     for(var i=0; i<filesLength; i++) {
@@ -184,12 +179,12 @@ console.log('000 [NFECT] -=-=-=-=-=-=-=- i['+i+'] files[i]:['+_nfect.files[itera
 //debug1
 console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
           if(err) {
-            pubsub.pub('/nfect/error',[1,'File Read Error: ['+err+']']);
+            _pubsub.pub('/nfect/error',[1,'File Read Error: ['+err+']']);
             return;
           } else {
 //debug1
 console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
-            pubsub.pub('/nfect/input/file',[iteration,contents]);
+            _pubsub.pub('/nfect/input/file',[iteration,contents]);
             return;
           }
         });
@@ -198,7 +193,7 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
   };
   
   // fire up the _nfect storage object
-  function form(args) {
+  function _form(args) {
     _nfect = {
       args: args,
       callback: {},
@@ -221,11 +216,11 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
       type: '',
       version: 'v0.1.1'
     };
-    pubsub.pub('/nfect/formed');
+    _pubsub.pub('/nfect/formed');
   };
   
   // initialize the _nfect object
-  function init() {
+  function _init() {
     var argsLength = _nfect.args.length,
       descriptor = {},
       callback = {},
@@ -242,7 +237,7 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
         } else if(typeof(_nfect.args[1]) === 'object') {
           connection = _nfect.args[1];
         } else {
-          pubsub.pub('/nfect/error',[2,'Syntax Error: Malformed Descriptor: Argument Type']);
+          _pubsub.pub('/nfect/error',[2,'Syntax Error: Malformed Descriptor: Argument Type']);
           return;
         }
         break;
@@ -255,16 +250,16 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
           callback = _nfect.args[1];
           connection = _nfect.args[2];
         } else {
-          pubsub.pub('/nfect/error',[3,'Syntax Error: Malformed Descriptor: Argument Type']);
+          _pubsub.pub('/nfect/error',[3,'Syntax Error: Malformed Descriptor: Argument Type']);
           return;
         }
         break;
       default:
-        pubsub.pub('/nfect/error',[4,'Syntax Error: Malformed Descriptor: Argument Number']);
+        _pubsub.pub('/nfect/error',[4,'Syntax Error: Malformed Descriptor: Argument Number']);
         return;
     }
     if(!descriptor) {
-      pubsub.pub('/nfect/error',[5,'Syntax Error: Malformed Descriptor: Missing']);
+      _pubsub.pub('/nfect/error',[5,'Syntax Error: Malformed Descriptor: Missing']);
       return;
     }
     var type = Object.prototype.toString.call(descriptor);
@@ -283,7 +278,7 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
         _nfect.files.push(descriptor);
         break;
       default:
-        pubsub.pub('/nfect/error',[6,'Syntax Error: Malformed Descriptor: Improper Type']);
+        _pubsub.pub('/nfect/error',[6,'Syntax Error: Malformed Descriptor: Improper Type']);
         return;
     }
     if(callback && typeof(callback) == 'function') {
@@ -296,11 +291,11 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
     }
     _nfect.state.initialized = true;
     // trigger initialized event handler
-    pubsub.pub('/nfect/initialized');
+    _pubsub.pub('/nfect/initialized');
   };
   
   //utility function for determining emptiness of object
-  function isEmpty(obj) {
+  function _isEmpty(obj) {
     for(var prop in obj) {
       if(obj.hasOwnProperty(prop)) return false;
     }
@@ -308,7 +303,7 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
   };
   
   //todo return output instead of writing output to connection
-  function out() {
+  function _out() {
 //debug1
 console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.display['+_nfect.output.display+']');
     if(_nfect.output.display === false) {
@@ -321,24 +316,26 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
     }
   };
   
-  function parse() {
+  function _parse() {
     if(_nfect.state.parse) {
-      if(!isEmpty(_nfect.descriptor) && _nfect.descriptor.files && _nfect.descriptor.files.length > 0) {
+      if(!_isEmpty(_nfect.descriptor) && _nfect.descriptor.files && _nfect.descriptor.files.length > 0) {
         _nfect.files = _nfect.descriptor.files;
       } else {
-        pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
+        _pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
         return;
       }
     }
-    pubsub.pub('/nfect/parsed');
+    _pubsub.pub('/nfect/parsed');
   };
   
   function nfect() {
-    var errorHandle = pubsub.sub('/nfect/error', function(num, msg) {
+    _nfect = { };
+    _pubsub.reset();
+    var errorHandle = _pubsub.sub('/nfect/error', function(num, msg) {
       _nfect.type = 'error';
       _nfect.error.number = num;
       _nfect.error.message = msg;
-      if(_nfect.conn && typeof(_nfect.conn) === 'object' && !isEmpty(_nfect.conn)) {
+      if(_nfect.conn && typeof(_nfect.conn) === 'object' && !_isEmpty(_nfect.conn)) {
         _nfect.conn.writeHead(500, { 'Content-Type': 'text/plain' });
         _nfect.conn.write('Error '+_nfect.error.number+': '+_nfect.error.message);
         _nfect.conn.end();
@@ -346,32 +343,32 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
         return 'Error '+_nfect.error.number+': '+_nfect.error.message;
       }
     });
-    var formHandle = pubsub.sub('/nfect/formed', function() {
+    var formHandle = _pubsub.sub('/nfect/formed', function() {
 //debug1
 console.log('[NFECT].nfect().formHandle ***** HERE *****');
-      init();
+      _init();
     });
-    var initHandle = pubsub.sub('/nfect/initialized', function() {
+    var initHandle = _pubsub.sub('/nfect/initialized', function() {
 //debug1
 console.log('[NFECT].nfect().initHandle ***** HERE *****');
-      parse();
+      _parse();
     });
-    var parseHandle = pubsub.sub('/nfect/parsed', function() {
+    var parseHandle = _pubsub.sub('/nfect/parsed', function() {
 //debug1
 console.log('[NFECT].nfect().parseHandle ***** HERE *****');
       if(_nfect.type === 'array' || _nfect.type === 'string') {
-         basic();
-       } else if(_nfect.type === 'object') {
-         advanced();
-       }
+        _basic();
+      } else if(_nfect.type === 'object') {
+        _advanced();
+      }
     });
-    var processHandle = pubsub.sub('/nfect/processed', function() {
-      out();
+    var processHandle = _pubsub.sub('/nfect/processed', function() {
+      _out();
     });
     // formalize arguments array
     var args = Array.prototype.slice.call(arguments);
     // guarantee ourselves this gets tossed onto event loop
-    setTimeout(form(args),0);
+    setTimeout(_form(args),0);
   };
   
   // expose nfect

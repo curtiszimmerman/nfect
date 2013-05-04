@@ -14,7 +14,7 @@ var server = http.createServer(function(req, res) {
   } else if(req.url == '/test.js') {
     console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
     var nfect = require('../nfect');
-    nfect(['./test/test.js'], res);
+    nfect('./test/test.js', res);
   } else if(req.url == '/test2.js') {
     var nfect = require('../nfect');
     var output = nfect(['./test/test2.js']);
