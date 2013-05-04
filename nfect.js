@@ -70,14 +70,14 @@ var nfect = (function() {
   var _nfect = { };
   // data subobject is how we encapsulate and transport data to files
   var data = { };
-    
-  //required modules
-  var fs = require('fs');
   
   // pub/sub/unsub pattern utility functions
   var _pubsub = (function() {
     // pub/sub/unsub pattern cache
     var cache = { };
+    function _flush() {
+      cache = { };
+    };
     function _pub(topic, args, scope) {
       if(cache[topic]) {
         var currentTopic = cache[topic],
@@ -86,9 +86,6 @@ var nfect = (function() {
           currentTopic[i].apply(scope || this, args || []);
         }
       }
-    };
-    function _reset() {
-      cache = { };
     };
     function _sub(topic, callback) {
       if(!cache[topic]) {
@@ -112,8 +109,8 @@ var nfect = (function() {
       }
     };
     return {
+      flush:_flush,
       pub:_pub,
-      reset:_reset,
       sub:_sub,
       unsub:_unsub
     };
@@ -148,19 +145,16 @@ var nfect = (function() {
   //todo set up eventemitter for fileRead.complete() to trigger out()
   function _basic() {
     var filesLength = _nfect.files.length,
-      filesRead = 0;
+      filesRead = 0,
+      fs = require('fs');
     var contentStorage = [];
     var fileHandle = _pubsub.sub('/nfect/input/file', function(position, content) {
       filesRead++;
-//debug1
-console.log('filesRead:['+filesRead+']');
       contentStorage[position] = content;
       // preserve input file order
       if(filesRead === filesLength) {
         for(var i=0; i<filesLength; i++) {
-          (function(num) {
-            _nfect.output.content.push(contentStorage[num]);
-          }(i));
+          _nfect.output.content.push(contentStorage[i]);
         }
         _pubsub.pub('/nfect/processed');
         return;
@@ -214,7 +208,7 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
         parse: false
       },
       type: '',
-      version: 'v0.1.1'
+      version: 'v0.1.2'
     };
     _pubsub.pub('/nfect/formed');
   };
@@ -330,7 +324,7 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
   
   function nfect() {
     _nfect = { };
-    _pubsub.reset();
+    _pubsub.flush();
     var errorHandle = _pubsub.sub('/nfect/error', function(num, msg) {
       _nfect.type = 'error';
       _nfect.error.number = num;
