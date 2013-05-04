@@ -277,8 +277,8 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
     if(callback && typeof(callback) == 'function') {
       _nfect.callback = callback;
     }
-    // sanity check connection object by testing bytesRead
-    if(connection && typeof(connection) == 'object' && connection.bytesRead >= 0) {
+    // sanity check connection object (_maxListeners *should* be positive int or zero)
+    if(connection && typeof(connection) == 'object' && connection._maxListeners >= 0) {
       _nfect.conn = connection;
       _nfect.output.display = true;
     }
