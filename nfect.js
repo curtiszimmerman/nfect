@@ -150,6 +150,8 @@ var nfect = (function() {
     var contentStorage = [];
     var fileHandle = _pubsub.sub('/nfect/input/file', function(position, content) {
       filesRead++;
+//debug1
+console.log('_____________________________________inside readFile trigger:content:['+content+']');
       contentStorage[position] = content;
       // preserve input file order
       if(filesRead === filesLength) {
@@ -164,22 +166,20 @@ var nfect = (function() {
       // pass iterator into closure
       (function(iteration) {
 //debug1
-console.log('000 [NFECT] -=-=-=-=-=-=-=- i['+i+'] files[i]:['+_nfect.files[iteration]+']');
+console.log('000 [NFECT] -=-=-=-=-=-=-=- iter['+iteration+'] files[iter]:['+_nfect.files[iteration]+']');
         var nextFile = _nfect.files[iteration];
-        //FIX -- these are going to be put onto the stack and potentially 
-        //taken off in some random order. you need to push onto an array 
-        //to preserve the order intended by client
+        //FIX -- NONDISPLAY RETURN data is not functioning correctly. it doesn't 
+        // return any data, and doesn't appear to trigger the following readFile()
         fs.readFile(nextFile, 'utf8', function(err, contents) {
 //debug1
 console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
           if(err) {
             _pubsub.pub('/nfect/error',[1,'File Read Error: ['+err+']']);
-            return;
+            return false;
           } else {
 //debug1
 console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
             _pubsub.pub('/nfect/input/file',[iteration,contents]);
-            return;
           }
         });
       }(i));
@@ -204,11 +204,10 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
       },
       process: 'basic',
       state: {
-        initialized: false,
         parse: false
       },
       type: '',
-      version: 'v0.1.2'
+      version: 'v0.1.3'
     };
     _pubsub.pub('/nfect/formed');
   };
@@ -232,7 +231,7 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
           connection = _nfect.args[1];
         } else {
           _pubsub.pub('/nfect/error',[2,'Syntax Error: Malformed Descriptor: Argument Type']);
-          return;
+          return false;
         }
         break;
       case 3:
@@ -245,16 +244,16 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
           connection = _nfect.args[2];
         } else {
           _pubsub.pub('/nfect/error',[3,'Syntax Error: Malformed Descriptor: Argument Type']);
-          return;
+          return false;
         }
         break;
       default:
         _pubsub.pub('/nfect/error',[4,'Syntax Error: Malformed Descriptor: Argument Number']);
-        return;
+        return false;
     }
     if(!descriptor) {
       _pubsub.pub('/nfect/error',[5,'Syntax Error: Malformed Descriptor: Missing']);
-      return;
+      return false;
     }
     var type = Object.prototype.toString.call(descriptor);
     switch(type) {
@@ -273,17 +272,16 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
         break;
       default:
         _pubsub.pub('/nfect/error',[6,'Syntax Error: Malformed Descriptor: Improper Type']);
-        return;
+        return false;
     }
     if(callback && typeof(callback) == 'function') {
       _nfect.callback = callback;
     }
-    //fix -- properly detect connection
-    if(connection && typeof(connection) == 'object') {
+    // sanity check connection object by testing bytesRead
+    if(connection && typeof(connection) == 'object' && connection.bytesRead >= 0) {
       _nfect.conn = connection;
       _nfect.output.display = true;
     }
-    _nfect.state.initialized = true;
     // trigger initialized event handler
     _pubsub.pub('/nfect/initialized');
   };
@@ -300,14 +298,13 @@ console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
   function _out() {
 //debug1
 console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.display['+_nfect.output.display+']');
-    if(_nfect.output.display === false) {
-      return _nfect.output.content.join('');
-    } else {
+    if(_nfect.output.display === true) {
       var output = _nfect.output.content.join('');
       _nfect.conn.writeHead(200, { 'Content-Length': output.length, 'Content-Type': 'text/html' });
       _nfect.conn.write(output);
       _nfect.conn.end();
     }
+    _pubsub.pub('/nfect/callback');
   };
   
   function _parse() {
@@ -316,7 +313,7 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
         _nfect.files = _nfect.descriptor.files;
       } else {
         _pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
-        return;
+        return false;
       }
     }
     _pubsub.pub('/nfect/parsed');
@@ -334,8 +331,12 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
         _nfect.conn.write('Error '+_nfect.error.number+': '+_nfect.error.message);
         _nfect.conn.end();
       } else {
-        return 'Error '+_nfect.error.number+': '+_nfect.error.message;
+        console.log('Error '+_nfect.error.number+': ['+_nfect.error.message+']');
       }
+      // initiate callback with error
+      if(_nfect.callback && typeof(_nfect.callback) === 'function') {
+        _nfect.callback.apply(this, 'Error '+_nfect.error.number+': ['+_nfect.error.message+']');
+      }  
     });
     var formHandle = _pubsub.sub('/nfect/formed', function() {
 //debug1
@@ -358,6 +359,13 @@ console.log('[NFECT].nfect().parseHandle ***** HERE *****');
     });
     var processHandle = _pubsub.sub('/nfect/processed', function() {
       _out();
+    });
+    var callbackHandle = _pubsub.sub('/nfect/callback', function() {
+      // initiate callback
+      if(_nfect.callback && typeof(_nfect.callback) === 'function') {
+        console.log('[NFECT] Initiating callback with output');
+        _nfect.callback.apply(this, _nfect.output.content.join(''));
+      }
     });
     // formalize arguments array
     var args = Array.prototype.slice.call(arguments);

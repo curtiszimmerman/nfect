@@ -14,10 +14,12 @@ var server = http.createServer(function(req, res) {
   } else if(req.url == '/test.js') {
     console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
     var nfect = require('../nfect');
-    nfect('./test/test.js', res);
+    var output = nfect('./test/test.js', res);
+//debug1
+console.log('[NFECT-TEST.JS] ?????????????????? output:['+output+']');
   } else if(req.url == '/test2.js') {
     var nfect = require('../nfect');
-    var output = nfect(['./test/test2.js']);
+    var output = nfect('./test/test2.js', res);
 //debug1
 console.log('[NFECT-TEST.JS].req.url == test.js output:['+output+']');
     res.writeHead(200, { 'Content-Type': 'text/plain' });
