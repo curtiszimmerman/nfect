@@ -150,8 +150,6 @@ var nfect = (function() {
     var contentStorage = [];
     var fileHandle = _pubsub.sub('/nfect/input/file', function(position, content) {
       filesRead++;
-//debug1
-console.log('_____________________________________inside readFile trigger:content:['+content+']');
       contentStorage[position] = content;
       // preserve input file order
       if(filesRead === filesLength) {
@@ -168,8 +166,6 @@ console.log('_____________________________________inside readFile trigger:conten
 //debug1
 console.log('000 [NFECT] -=-=-=-=-=-=-=- iter['+iteration+'] files[iter]:['+_nfect.files[iteration]+']');
         var nextFile = _nfect.files[iteration];
-        //FIX -- NONDISPLAY RETURN data is not functioning correctly. it doesn't 
-        // return any data, and doesn't appear to trigger the following readFile()
         fs.readFile(nextFile, 'utf8', function(err, contents) {
 //debug1
 console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
@@ -177,8 +173,6 @@ console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
             _pubsub.pub('/nfect/error',[1,'File Read Error: ['+err+']']);
             return false;
           } else {
-//debug1
-console.log('[NFECT] =-=-=-=-=-=->>>>>> for shats and grans: i['+iteration+']');
             _pubsub.pub('/nfect/input/file',[iteration,contents]);
           }
         });
@@ -320,8 +314,10 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
   };
   
   function nfect() {
+    // zeroize data objects
     _nfect = { };
     _pubsub.flush();
+    // initiate triggers
     var errorHandle = _pubsub.sub('/nfect/error', function(num, msg) {
       _nfect.type = 'error';
       _nfect.error.number = num;
@@ -336,7 +332,9 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
       // initiate callback with error
       if(_nfect.callback && typeof(_nfect.callback) === 'function') {
         _nfect.callback.apply(this, 'Error '+_nfect.error.number+': ['+_nfect.error.message+']');
-      }  
+      } else {
+        return false;
+      }
     });
     var formHandle = _pubsub.sub('/nfect/formed', function() {
 //debug1
@@ -364,12 +362,12 @@ console.log('[NFECT].nfect().parseHandle ***** HERE *****');
       // initiate callback
       if(_nfect.callback && typeof(_nfect.callback) === 'function') {
         console.log('[NFECT] Initiating callback with output');
-        _nfect.callback.apply(this, _nfect.output.content.join(''));
+        _nfect.callback.apply(this, [_nfect.output.content.join('')]);
       }
     });
     // formalize arguments array
     var args = Array.prototype.slice.call(arguments);
-    // guarantee ourselves this gets tossed onto event loop
+    // guarantee the trigger pull gets put onto the event queue
     setTimeout(_form(args),0);
   };
   
