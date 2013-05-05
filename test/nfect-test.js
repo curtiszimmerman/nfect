@@ -29,7 +29,9 @@ var server = http.createServer(function(req, res) {
   ////////////// test3.js
     var nfect = require('../nfect');
     nfect();
-  } else {
+  } else if(req.url == '/stall.js') {
+  ////////////// STALL TEST (i.e. do nothing)
+  } else{
   ////////////// default
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.write('(NFECT-TEST.JS) req.url['+req.url+']');
