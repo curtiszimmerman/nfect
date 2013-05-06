@@ -68,8 +68,6 @@ var nfect = (function() {
 
   // internal data object
   var _nfect = { };
-  // data subobject is how we encapsulate and transport data to files
-  var data = { };
   
   // pub/sub/unsub pattern utility functions
   var _pubsub = (function() {
@@ -183,24 +181,36 @@ console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
   // fire up the _nfect storage object
   function _form(args) {
     _nfect = {
+      // initial arguments
       args: args,
+      // callback if provided
       callback: {},
+      // web server connection
       conn: {},
+      // this is how we encapsulate and transport data from outside
+      data: {},
+      // internal copy of the use descriptor
       descriptor: {},
+      // nfect error details
       error: {
         message: '',
         number: 0
       },
+      // files for processing
       files: [],
+      // output type and content
       output: {
         display: false,
         content: []
       },
-      process: 'basic',
+      // processing state
       state: {
-        parse: false
+        parse: false,
+        process: 'basic'
       },
+      // input descriptor type
       type: '',
+      // nfect version
       version: 'v0.1.3'
     };
     _pubsub.pub('/nfect/formed');
@@ -324,31 +334,25 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
       _nfect.error.message = msg;
       if(_nfect.conn && typeof(_nfect.conn) === 'object' && !_isEmpty(_nfect.conn)) {
         _nfect.conn.writeHead(500, { 'Content-Type': 'text/plain' });
-        _nfect.conn.write('Error '+_nfect.error.number+': '+_nfect.error.message);
+        _nfect.conn.write('NFECT Error '+_nfect.error.number+': '+_nfect.error.message);
         _nfect.conn.end();
       } else {
-        console.log('Error '+_nfect.error.number+': ['+_nfect.error.message+']');
+        console.log('NFECT Error '+_nfect.error.number+': ['+_nfect.error.message+']');
       }
       // initiate callback with error
       if(_nfect.callback && typeof(_nfect.callback) === 'function') {
-        _nfect.callback.apply(this, 'Error '+_nfect.error.number+': ['+_nfect.error.message+']');
+        _nfect.callback.apply(this, ['Error '+_nfect.error.number+': ['+_nfect.error.message+']', null]);
       } else {
         return false;
       }
     });
     var formHandle = _pubsub.sub('/nfect/formed', function() {
-//debug1
-console.log('[NFECT].nfect().formHandle ***** HERE *****');
       _init();
     });
     var initHandle = _pubsub.sub('/nfect/initialized', function() {
-//debug1
-console.log('[NFECT].nfect().initHandle ***** HERE *****');
       _parse();
     });
     var parseHandle = _pubsub.sub('/nfect/parsed', function() {
-//debug1
-console.log('[NFECT].nfect().parseHandle ***** HERE *****');
       if(_nfect.type === 'array' || _nfect.type === 'string') {
         _basic();
       } else if(_nfect.type === 'object') {
@@ -362,7 +366,7 @@ console.log('[NFECT].nfect().parseHandle ***** HERE *****');
       // initiate callback
       if(_nfect.callback && typeof(_nfect.callback) === 'function') {
         console.log('[NFECT] Initiating callback with output');
-        _nfect.callback.apply(this, [_nfect.output.content.join('')]);
+        _nfect.callback.apply(this, [null, _nfect.output.content.join('')]);
       }
     });
     // formalize arguments array
@@ -373,7 +377,6 @@ console.log('[NFECT].nfect().parseHandle ***** HERE *****');
   
   // expose nfect
   return {
-    data: data,
     nfect: nfect
   };
 }());

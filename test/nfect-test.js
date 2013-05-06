@@ -11,27 +11,32 @@ var server = http.createServer(function(req, res) {
   ////////////// index
     console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
     var nfect = require('../nfect');
-    nfect(['./test/testhead.html','./test/testbody.html','./test/testfoot.html'], res);
+    nfect.go(['./test/testhead.html','./test/testbody.html','./test/testfoot.html'], res);
   } else if(req.url == '/test.js') {
   ////////////// test.js
     console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
     var nfect = require('../nfect');
-    var output = nfect('./test/test.js', res);
+    var output = nfect.go('./test/test.js', res);
   } else if(req.url == '/test2.js') {
   ////////////// test2.js
     var nfect = require('../nfect');
-    nfect('./test/test2.js', function(output) {
-      res.writeHead(200, { 'Content-Type': 'text/plain' });
-      res.write(output);
-      res.end();
+    nfect.go('./test/test2.js', function(error, output) {
+      if(error) {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.write(error);
+        res.end();
+      } else {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.write(output);
+        res.end();
+      }
     });
   } else if(req.url == '/test3.js') {
-  ////////////// test3.js
+  ////////////// data pass test
     var nfect = require('../nfect');
-    nfect();
-  } else if(req.url == '/stall.js') {
-  ////////////// STALL TEST (i.e. do nothing)
-  } else{
+    nfect.data = { test: 'test' };
+    nfect.go();
+  } else {
   ////////////// default
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.write('(NFECT-TEST.JS) req.url['+req.url+']');
