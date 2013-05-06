@@ -42,23 +42,19 @@
 * NOTE: without connection, nfect returns output as string
 ********************* example descriptor object:*************************
 descriptor = {
-  connection: {},
   files: ['head.html','body.html','foot.html'],
-  fileHandle: {},
-  headers: [{'Expires':''}],
+  headers: {'Expires':'4','Poop':0},
   output: 'html',
   status: 200
 };
 ********************* example descriptor object:*************************
 descriptor = {
-  connection: {},
   files: [
     { name: 'db.js', process: false, type: 'js' },
     { name: 'results.js', process: true, type: 'js' },
     { name: 'footer.js', process: false, type: 'js' }
   ],
-  fileHandle: {},
-  headers: [{'Expires':''}],
+  headers: {'Expires':'4','Poop':0},
   output: 'plain',
   status: 200
 };
@@ -140,44 +136,6 @@ var nfect = (function() {
     }
   };
   
-  //todo set up eventemitter for fileRead.complete() to trigger out()
-  function _basic() {
-    var filesLength = _nfect.files.length,
-      filesRead = 0,
-      fs = require('fs');
-    var contentStorage = [];
-    var fileHandle = _pubsub.sub('/nfect/input/file', function(position, content) {
-      filesRead++;
-      contentStorage[position] = content;
-      // preserve input file order
-      if(filesRead === filesLength) {
-        for(var i=0; i<filesLength; i++) {
-          _nfect.output.content.push(contentStorage[i]);
-        }
-        _pubsub.pub('/nfect/processed');
-        return;
-      }
-    });
-    for(var i=0; i<filesLength; i++) {
-      // pass iterator into closure
-      (function(iteration) {
-//debug1
-console.log('000 [NFECT] -=-=-=-=-=-=-=- iter['+iteration+'] files[iter]:['+_nfect.files[iteration]+']');
-        var nextFile = _nfect.files[iteration];
-        fs.readFile(nextFile, 'utf8', function(err, contents) {
-//debug1
-console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
-          if(err) {
-            _pubsub.pub('/nfect/error',[1,'File Read Error: ['+err+']']);
-            return false;
-          } else {
-            _pubsub.pub('/nfect/input/file',[iteration,contents]);
-          }
-        });
-      }(i));
-    }
-  };
-  
   // fire up the _nfect storage object
   function _form(args) {
     _nfect = {
@@ -198,15 +156,21 @@ console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
       },
       // files for processing
       files: [],
-      // output type and content
+      // output options:
+      //// output to connection?
+      //// output content array, additional client headers, 
+      //// output status code, output type (html/plain)
       output: {
         display: false,
-        content: []
+        content: [],
+        headers: {},
+        status: 200,
+        type: 'html'
       },
       // processing state
       state: {
         parse: false,
-        process: 'basic'
+        process: false
       },
       // input descriptor type
       type: '',
@@ -304,7 +268,9 @@ console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
 console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.display['+_nfect.output.display+']');
     if(_nfect.output.display === true) {
       var output = _nfect.output.content.join('');
-      _nfect.conn.writeHead(200, { 'Content-Length': output.length, 'Content-Type': 'text/html' });
+      // add content-length to our headers
+      _nfect.output.headers['Content-Length'] = output.length;
+      _nfect.conn.writeHead(200, _nfect.output.headers);
       _nfect.conn.write(output);
       _nfect.conn.end();
     }
@@ -319,8 +285,69 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
         _pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
         return false;
       }
+      // additional headers
+      if(!_isEmpty(_nfect.descriptor.headers) && _nfect.descriptor.headers) {
+        for(var header in _nfect.descriptor.headers) {
+          _nfect.output.headers[header] = _nfect.descriptor.headers[header];
+        }
+      }
     }
     _pubsub.pub('/nfect/parsed');
+  };
+  
+  function _process() {
+    var contentLength = _nfect.output.content.length;
+//debug1
+console.log('_______________ output.content.len:['+contentLength+']');
+    if(_nfect.output.type === 'html') {
+      _nfect.output.headers['Content-Type'] = 'text/html';
+    } else {
+      _nfect.output.headers['Content-Type'] = 'text/plain';
+    }
+    if(true) {
+    } else {
+      _pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
+      return false;
+    }
+    _pubsub.pub('/nfect/files/processed');
+  };
+  
+  //todo set up eventemitter for fileRead.complete() to trigger out()
+  function _readFiles() {
+    var filesLength = _nfect.files.length,
+      filesRead = 0,
+      fs = require('fs');
+    var contentStorage = [];
+    var fileHandle = _pubsub.sub('/nfect/input/file', function(position, content) {
+      filesRead++;
+      contentStorage[position] = content;
+      // preserve input file order
+      if(filesRead === filesLength) {
+        for(var i=0; i<filesLength; i++) {
+          _nfect.output.content.push(contentStorage[i]);
+        }
+        _pubsub.pub('/nfect/files/read');
+        return;
+      }
+    });
+    for(var i=0; i<filesLength; i++) {
+      // pass iterator into closure
+      (function(iteration) {
+//debug1
+console.log('000 [NFECT] -=-=-=-=-=-=-=- iter['+iteration+'] files[iter]:['+_nfect.files[iteration]+']');
+        var nextFile = _nfect.files[iteration];
+        fs.readFile(nextFile, 'utf8', function(err, contents) {
+//debug1
+console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
+          if(err) {
+            _pubsub.pub('/nfect/error',[1,'File Read Error: ['+err+']']);
+            return false;
+          } else {
+            _pubsub.pub('/nfect/input/file',[iteration,contents]);
+          }
+        });
+      }(i));
+    }
   };
   
   function nfect() {
@@ -354,12 +381,17 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
     });
     var parseHandle = _pubsub.sub('/nfect/parsed', function() {
       if(_nfect.type === 'array' || _nfect.type === 'string') {
-        _basic();
+        _readFiles();
       } else if(_nfect.type === 'object') {
-        _advanced();
+        _readFiles();
+        //fix -- this might need fixin
+        //advanced();
       }
     });
-    var processHandle = _pubsub.sub('/nfect/processed', function() {
+    var readHandle = _pubsub.sub('/nfect/files/read', function() {
+      _process();
+    });
+    var processHandle = _pubsub.sub('/nfect/files/processed', function() {
       _out();
     });
     var callbackHandle = _pubsub.sub('/nfect/callback', function() {
