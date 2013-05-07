@@ -37,7 +37,7 @@ var server = http.createServer(function(req, res) {
     nfect({
       files: ['./header.html','./body.html','./footer.html'],
       headers: { 'Expires': 'Wed, 01 Jan 2014 16:00:00 GMT' }
-    });
+    }, res);
   }
 }).listen(80);
 ```
