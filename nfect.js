@@ -137,18 +137,15 @@ var nfect = (function() {
         display: false,
         content: [],
         headers: {},
+        parse: false,
+        process: [],
         status: 200,
         type: 'html'
-      },
-      // processing state
-      state: {
-        parse: false,
-        process: []
       },
       // input descriptor type
       type: '',
       // nfect version
-      version: 'v0.1.3'
+      version: 'v0.1.4'
     };
     _pubsub.pub('/nfect/formed');
   };
@@ -205,7 +202,7 @@ var nfect = (function() {
       case '[object Object]':
         _nfect.type = 'object';
         _nfect.descriptor = descriptor;
-        _nfect.state.parse = true;
+        _nfect.output.parse = true;
         break;
       case '[object String]':
         _nfect.type = 'string';
@@ -235,6 +232,7 @@ var nfect = (function() {
     return true;
   };
   
+  //FIX -- update for new descriptor rules
   //todo return output instead of writing output to connection
   function _out() {
 //debug1
@@ -253,7 +251,7 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
   function _parse() {
     var plain = true,
       process = false;
-    if(_nfect.state.parse) {
+    if(_nfect.output.parse) {
       if(!_isEmpty(_nfect.descriptor) && _nfect.descriptor.files && _nfect.descriptor.files.length > 0) {
         // copy descriptor files array to nfect storage array
         _nfect.files = _nfect.descriptor.files;
@@ -284,7 +282,7 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
       // find file process specifiers or override process setting
       var file = _nfect.files[i];
       if(process === true) {
-        _nfect.state.process[i] = true;
+        _nfect.output.process[i] = true;
         continue;
       }
       if(typeof(file) === '[object Object]') {
@@ -297,7 +295,7 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
           }
         }
       } else {
-        _nfect.state.process[i] = false;
+        _nfect.output.process[i] = false;
       }
       // content detection
       if(file.match(regex)) {
