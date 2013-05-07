@@ -1,12 +1,11 @@
 /*
- * countdown server
+ * NFECT test/showcase
  */
 
 var http = require('http');
 var testPort = 9999;
 
 var server = http.createServer(function(req, res) {
-  console.log('(NFECT-TEST.JS) [client '+req.connection.remoteAddress+':'+req.connection.remotePort+' initiated connection]');
   if(req.url == '/') {
   ////////////// index
     console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
@@ -18,7 +17,8 @@ var server = http.createServer(function(req, res) {
     var nfect = require('../nfect');
     var output = nfect('./test/test.js', res);
   } else if(req.url == '/test2.js') {
-  ////////////// test2.js output redirect and error tests
+  ////////////// test2.js -- output redirect and error tests
+    console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
     var nfect = require('../nfect');
     nfect('./test/test2.js', function(error, output) {
       if(error) {
@@ -32,7 +32,7 @@ var server = http.createServer(function(req, res) {
       }
     });
   } else if(req.url == '/test3.js') {
-  ////////////// data pass test
+  ////////////// test3.js -- data pass test
     console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
     var nfect = require('../nfect');
     nfect({
@@ -44,6 +44,7 @@ var server = http.createServer(function(req, res) {
       }, res);
   } else {
   ////////////// default
+    console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.write('(NFECT-TEST.JS) req.url['+req.url+']');
     res.end();
