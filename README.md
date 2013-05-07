@@ -26,17 +26,19 @@ var server = http.createServer(function(req, res) {
 ```
 
 The following Node.js example initializes an HTTP server that responds to 
-all requests using NFECT and a simple descriptor to output a series of 
-files to build a single output file called `index.html`. The descriptor 
-also specifies a custom `Expires` HTTP header for caching purposes.
+requests for `index.html` using NFECT and a simple descriptor to build 
+a single output file from several input files. The descriptor also 
+specifies a custom `Expires` HTTP header for caching purposes.
 
 ```javascript
 var server = http.createServer(function(req, res) {
-  var nfect = require('../nfect');
-  nfect.go({
-    files: ['./header.html','body.html','footer.html'],
-    headers: { 'Expires': 'Wed, 01 Jan 2014 16:00:00 GMT' }
-  });
+  if(req.url == '/index.html') {
+    var nfect = require('../nfect');
+    nfect.go({
+      files: ['./header.html','./body.html','./footer.html'],
+      headers: { 'Expires': 'Wed, 01 Jan 2014 16:00:00 GMT' }
+    });
+  }
 }).listen(80);
 ```
 
