@@ -280,13 +280,18 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
       }
     } else {
       // toggle this local variable to false if content type == html
-      var plain = true,
-        fileRegex = /\.html/i;
-      for(var file in _nfect.files) {
+      var filesLength = _nfect.files.length,
+        plain = true,
+        regex = /\.html/i;
+      for(var i=0; i<filesLength; i++) {
+        var file = _nfect.files[i];
+//debug2
+console.log('******************** file:['+file+']');
+console.log('******************** file.match(fileRegex):['+file.match(regex)+']');
         if(typeof(file) === '[object Object]') {
           _nfect.state.process = true;
         }
-        if(file.match(fileRegex)) {
+        if(file.match(regex)) {
           plain = false;
         }
       }
