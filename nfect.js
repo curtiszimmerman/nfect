@@ -143,7 +143,7 @@ var nfect = (function() {
       // processing state
       state: {
         parse: false,
-        process: false
+        process: []
       },
       // input descriptor type
       type: '',
@@ -251,18 +251,13 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
   };
   
   function _parse() {
+    var processDesc = false;
     if(_nfect.state.parse) {
       if(!_isEmpty(_nfect.descriptor) && _nfect.descriptor.files && _nfect.descriptor.files.length > 0) {
-        if(_nfect.descriptor.process === true) {
-          _nfect.state.process = true;
-        } else {
-          _nfect.files = _nfect.descriptor.files;
-          for(var file in _nfect.files) {
-            if(typeof(file) === '[object Object]') {
-              _nfect.state.process = true;
-            }
-          }
-        }
+        // copy descriptor files array to nfect storage array
+        _nfect.files = _nfect.descriptor.files;
+        // override process setting
+        processDesc = true;
       } else {
         _pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
         return false;
@@ -273,6 +268,8 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
           _nfect.output.headers[header] = _nfect.descriptor.headers[header];
         }
       }
+      // output type
+      //fix -- redundant with type checking below
       if(_nfect.descriptor.output === 'html') {
         _nfect.output.type = 'html';
       } else if(_nfect.descriptor.output === 'plain') {
@@ -280,26 +277,40 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
       }
     } else {
       // toggle this local variable to false if content type == html
-      var filesLength = _nfect.files.length,
-        plain = true,
-        regex = /\.html/i;
-      for(var i=0; i<filesLength; i++) {
-        var file = _nfect.files[i];
-//debug2
-console.log('******************** file:['+file+']');
-console.log('******************** file.match(fileRegex):['+file.match(regex)+']');
+    }
+    var filesLength = _nfect.files.length,
+      plain = true,
+      regex = /\.html/i;
+    for(var i=0; i<filesLength; i++) {
+      // find file process specifiers or override process setting
+      var file = _nfect.files[i];
+      //fix -- this is stupid and hacky and TERRIBLE JEEZ
+      if(typeof(file) === '[object Object]' || processDesc === true) {
         if(typeof(file) === '[object Object]') {
-          _nfect.state.process = true;
+          for(var piece in file) {
+            if(typeof(piece) === '[object String]') {
+              _nfect.files[i] = piece;
+            } else {
+              // ELSE FUCKIN' PROBLEM! ITS DA ROC!
+              _pubsub.pub('/nfect/error',[7,'Syntax Error: Malformed Descriptor: Files Array']);
+              return false;
+            }
+          }
         }
-        if(file.match(regex)) {
-          plain = false;
-        }
-      }
-      if(plain === false) {
-        _nfect.output.type = 'html';
+        _nfect.state.process[i] = true;
       } else {
-        _nfect.output.type = 'plain';
+        _nfect.state.process[i] = false;
       }
+      // content detection
+      if(file.match(regex)) {
+        plain = false;
+      }
+    }
+    // output type
+    if(plain === false) {
+      _nfect.output.type = 'html';
+    } else {
+      _nfect.output.type = 'plain';
     }
     _pubsub.pub('/nfect/parsed');
   };
@@ -316,7 +327,7 @@ console.log('_______________ output.content.len:['+contentLength+']');
     //fix -- add test for _nfect.state.process === true ? process : noprocess;
     if(true) {
     } else {
-      _pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
+      _pubsub.pub('/nfect/error',[8,'Syntax Error: Descriptor Empty']);
       return false;
     }
     _pubsub.pub('/nfect/files/processed');
