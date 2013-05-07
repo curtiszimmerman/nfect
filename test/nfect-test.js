@@ -35,10 +35,12 @@ var server = http.createServer(function(req, res) {
   ////////////// data pass test
     console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
     var nfect = require('../nfect');
-    nfect.data = { test: 'test' };
     nfect({
+        data: { client:'abcd0123' },
         files:['./test/test3.js'],
-        process:true
+        headers:{ 'Expires': 'Wed, 01 Jan 2014 16:00:00 GMT' },
+        process:true,
+        status: 200
       }, res);
   } else {
   ////////////// default

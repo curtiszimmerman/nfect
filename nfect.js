@@ -251,13 +251,14 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
   };
   
   function _parse() {
-    var processDesc = false;
+    var plain = true,
+      process = false;
     if(_nfect.state.parse) {
       if(!_isEmpty(_nfect.descriptor) && _nfect.descriptor.files && _nfect.descriptor.files.length > 0) {
         // copy descriptor files array to nfect storage array
         _nfect.files = _nfect.descriptor.files;
         // override process setting
-        processDesc = true;
+        process = true;
       } else {
         _pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
         return false;
@@ -269,35 +270,32 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
         }
       }
       // output type
-      //fix -- redundant with type checking below
       if(_nfect.descriptor.output === 'html') {
-        _nfect.output.type = 'html';
+        plain = false;
       } else if(_nfect.descriptor.output === 'plain') {
-        _nfect.output.type = 'plain';
+        plain = true;
       }
     } else {
       // toggle this local variable to false if content type == html
     }
     var filesLength = _nfect.files.length,
-      plain = true,
       regex = /\.html/i;
     for(var i=0; i<filesLength; i++) {
       // find file process specifiers or override process setting
       var file = _nfect.files[i];
-      //fix -- this is stupid and hacky and TERRIBLE JEEZ
-      if(typeof(file) === '[object Object]' || processDesc === true) {
-        if(typeof(file) === '[object Object]') {
-          for(var piece in file) {
-            if(typeof(piece) === '[object String]') {
-              _nfect.files[i] = piece;
-            } else {
-              // ELSE FUCKIN' PROBLEM! ITS DA ROC!
-              _pubsub.pub('/nfect/error',[7,'Syntax Error: Malformed Descriptor: Files Array']);
-              return false;
-            }
+      if(process === true) {
+        _nfect.state.process[i] = true;
+        continue;
+      }
+      if(typeof(file) === '[object Object]') {
+        for(var piece in file) {
+          if(typeof(piece) === '[object String]') {
+            _nfect.files[i] = piece;
+          } else {
+            _pubsub.pub('/nfect/error',[7,'Syntax Error: Malformed Descriptor: Files Array']);
+            return false;
           }
         }
-        _nfect.state.process[i] = true;
       } else {
         _nfect.state.process[i] = false;
       }
