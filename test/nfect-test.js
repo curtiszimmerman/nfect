@@ -33,22 +33,13 @@ var server = http.createServer(function(req, res) {
     });
   } else if(req.url == '/test3.js') {
   ////////////// data pass test
+    console.log('(NFECT-TEST.JS) from ['+req.connection.remoteAddress+':'+req.connection.remotePort+']');
     var nfect = require('../nfect');
     nfect.data = { test: 'test' };
     nfect({
         files:['./test/test3.js'],
         process:true
-      }, function(error, output) {
-      if(error) {
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.write(error);
-        res.end();
-      } else {
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.write(output);
-        res.end();
-      }
-    });
+      }, res);
   } else {
   ////////////// default
     res.writeHead(404, { 'Content-Type': 'text/plain' });
