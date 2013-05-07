@@ -21,7 +21,7 @@ to all requests using NFECT to output an `index.html` file to the client.
 ```javascript
 var server = http.createServer(function(req, res) {
   var nfect = require('../nfect');
-  nfect.go('./index.html', res);
+  nfect('./index.html', res);
 }).listen(80);
 ```
 
@@ -34,7 +34,7 @@ specifies a custom `Expires` HTTP header for caching purposes.
 var server = http.createServer(function(req, res) {
   if(req.url == '/index.html') {
     var nfect = require('../nfect');
-    nfect.go({
+    nfect({
       files: ['./header.html','./body.html','./footer.html'],
       headers: { 'Expires': 'Wed, 01 Jan 2014 16:00:00 GMT' }
     });
