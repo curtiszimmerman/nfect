@@ -37,9 +37,9 @@ var server = http.createServer(function(req, res) {
     var nfect = require('../nfect');
     nfect({
         data: { client:'abcd0123' },
-        files:['./test/test3.js'],
-        headers:{ 'Expires': 'Wed, 01 Jan 2014 16:00:00 GMT' },
-        process:true,
+        files: ['./test/test3.js'],
+        headers: { 'Expires': '0' },
+        process: true,
         status: 200
       }, res);
   } else {

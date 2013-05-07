@@ -1,6 +1,6 @@
 //<?nfect
 //var client = 'foo';
 //?>
-//alert('OMFG:['+client+']');
+//alert('[test3.js].client:['+client+']');
 
-alert('WTF');
+alert('[test3.js]');

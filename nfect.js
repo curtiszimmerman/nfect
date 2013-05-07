@@ -132,6 +132,7 @@ var nfect = (function() {
       // output options:
       //// output to connection?
       //// output content array, additional client headers, 
+      //// output requires parse?, boolean array: process files?
       //// output status code, output type (html/plain)
       output: {
         display: false,
@@ -241,7 +242,7 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
       var output = _nfect.output.content.join('');
       // add content-length to our headers
       _nfect.output.headers['Content-Length'] = output.length;
-      _nfect.conn.writeHead(200, _nfect.output.headers);
+      _nfect.conn.writeHead(_nfect.output.status, _nfect.output.headers);
       _nfect.conn.write(output);
       _nfect.conn.end();
     }
@@ -249,6 +250,8 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
   };
   
   function _parse() {
+//debug1
+console.log('[NFECT] ___________-------->>>>>>> parsing!');
     var plain = true,
       process = false;
     if(_nfect.output.parse) {
@@ -260,6 +263,10 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
       } else {
         _pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
         return false;
+      }
+      // data for input files
+      if(!_isEmpty(_nfect.descriptor.data) && _nfect.descriptor.data) {
+        _nfect.data = _nfect.descriptor.data;
       }
       // additional headers
       if(!_isEmpty(_nfect.descriptor.headers) && _nfect.descriptor.headers) {
@@ -273,8 +280,6 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
       } else if(_nfect.descriptor.output === 'plain') {
         plain = true;
       }
-    } else {
-      // toggle this local variable to false if content type == html
     }
     var filesLength = _nfect.files.length,
       regex = /\.html/i;
@@ -312,6 +317,21 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
   };
   
   function _process() {
+//debug1
+console.log('[NFECT] ___________-------->>>>>>> processing!');
+/*
+ * 
+ * 
+ * trouble afoot at the circle-k:
+ * for some reason node.js is hiccuping here on output of (i think)
+ * test2.js... it comes down to event loop semantics, i believe, 
+ * because some test runs of the file pile run just fine, but most
+ * don't. test, test2, test3 runs fine when everything runs in order, 
+ * but otherwise nope. hangs
+ * 
+ * 
+ * 
+ */
     var contentLength = _nfect.output.content.length;
     if(_nfect.output.type === 'html') {
       _nfect.output.headers['Content-Type'] = 'text/html';
@@ -331,6 +351,8 @@ console.log('_______________ output.content.len:['+contentLength+']');
   
   //todo set up eventemitter for fileRead.complete() to trigger out()
   function _readFiles() {
+//debug1
+console.log('[NFECT] ___________-------->>>>>>> reading files!');
     var filesLength = _nfect.files.length,
       filesRead = 0,
       fs = require('fs');

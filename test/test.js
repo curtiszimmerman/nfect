@@ -1,1 +1,1 @@
-alert('OMFG');
+alert('[test.js]');
