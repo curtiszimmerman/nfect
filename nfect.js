@@ -5,20 +5,6 @@
  */
  
 /*
- * var outputString = nfect.go( <string input> );
- * var outputString = nfect.go( <string input>, function callback() );
- * nfect.go( <string input>, {object connection} );
- * var outputString = nfect.go( [array inputFiles] );
- * var outputString = nfect.go( {object descriptor} );
- * EXAMPLES:
- * var output = nfect.go( 'file.html' );
- * var output = nfect.go( 'file.html', callback() );
- * var output = nfect.go( {descriptor} );
- * nfect.go( 'file.html', {connection} );
- * nfect.go( ['file.html'], {connection} );
- * nfect.go( ['file1.html', 'file2.html'], {connection} );
- * nfect.go( {descriptor}, {connection} );
- * nfect.go( {descriptor}, {connection}, callback() );
  * NOTES: 
  * -- without connection, nfect returns output as string
  * -- connection specified, nfect automatically applies these headers:
@@ -38,23 +24,20 @@
  * -- initialize http.createServer object and specify as second argument 
  *   to nfect.go function
 ********************* example descriptor object:*************************
-* example: ['head.html',{'db.js'},'body.html','foot.html'], connection;
+example: ['head.html',{'db.js'},'body.html','foot.html']
 ********************* example descriptor object:*************************
-descriptor = {
-  files: ['head.html','body.html','foot.html'],
+example: {
+  files: [{'head.html'},'body.html','foot.html'],
   headers: {'Expires':'4','Poop':0},
   output: 'html',
   status: 200
-};
+}
 ********************* example descriptor object:*************************
-descriptor = {
-  files: [
-    { name: 'db.js', process: false, type: 'js' },
-    { name: 'results.js', process: true, type: 'js' },
-    { name: 'footer.js', process: false, type: 'js' }
-  ],
+example: {
+  files: ['db.js','results.js','footer.js'],
   headers: {'Expires':'4','Poop':0},
   output: 'plain',
+  process: true,
   status: 200
 };
 ************************************************************************/
@@ -258,11 +241,16 @@ console.log('[NFECT] ___________-------->>>>>>> parsing!');
       if(!_isEmpty(_nfect.descriptor) && _nfect.descriptor.files && _nfect.descriptor.files.length > 0) {
         // copy descriptor files array to nfect storage array
         _nfect.files = _nfect.descriptor.files;
-        // override process setting
-        process = true;
       } else {
         _pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
         return false;
+      }
+      if(_nfect.descriptor.process === true) {
+        // override process setting
+        //fix -- is this is frickin rong, dude?
+        process = true;
+      } else {
+        process = false;
       }
       // data for input files
       if(!_isEmpty(_nfect.descriptor.data) && _nfect.descriptor.data) {
@@ -286,11 +274,8 @@ console.log('[NFECT] ___________-------->>>>>>> parsing!');
     for(var i=0; i<filesLength; i++) {
       // find file process specifiers or override process setting
       var file = _nfect.files[i];
-      if(process === true) {
-        _nfect.output.process[i] = true;
-        continue;
-      }
       if(typeof(file) === '[object Object]') {
+        process = true;
         for(var piece in file) {
           if(typeof(piece) === '[object String]') {
             _nfect.files[i] = piece;
@@ -299,6 +284,9 @@ console.log('[NFECT] ___________-------->>>>>>> parsing!');
             return false;
           }
         }
+      }
+      if(process === true) {
+        _nfect.output.process[i] = true;
       } else {
         _nfect.output.process[i] = false;
       }
