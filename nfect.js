@@ -1,5 +1,5 @@
 /*
- *  nfect.js -- web front-end constructor
+ *  nfect.js -- Node.js Front-End Construction Tool
  *  pass in an object describing the files and their function and 
  *  nfect outputs it properly to the client
  */
@@ -7,22 +7,19 @@
 /*
  * NOTES: 
  * -- without connection, nfect returns output as string
- * -- connection specified, nfect automatically applies these headers:
- *  'Content-Type': 'text/' + [output type] (default depends on extension)
- *  'Content-Length': [calculated length of output]
- *  - status code is specified (default is 200)
- * -- on error reading ANY file, nfect aborts operation and only outputs 
- *   information about the error
- * -- nfect attempts to calculate the output type based on extension and 
- *   some rudimentary analytics, especially with simplified descriptors
- * SUGGESTED OPERATION:
- * -- in array of files, use string-literals to specify vanilla html and 
- *   provide files you want pre-processed by nfect (with code that is 
- *   specified with <?nfect and ?> tags, for example) in the array as 
- *   objects with only the filename specified as a string. see below for 
- *   example.
- * -- initialize http.createServer object and specify as second argument 
- *   to nfect.go function
+ * -- NFECT automagically applies the following headers to client:
+ *   'Content-Type': 'text/plain' (or 'text/html' depending on content)
+ *   'Content-Length': (int)output.length
+ * -- Default server status code sent to client is 200.
+ * -- On error, NFECT aborts operation and only outputs error number 
+ *   and error message. See below for callback notes.
+ * -- NFECT attempts to detect output type based on file extension.
+ * -- NFECT accepts a callback function instead of (or in addition to)
+ *   a client connection object. On error, information about error is 
+ *   passed to callback as first argument. Otherwise output is passed 
+ *   as default argument.
+********************* example descriptor object:*************************
+example: 'index.html'
 ********************* example descriptor object:*************************
 example: ['head.html',{'db.js'},'body.html','foot.html']
 ********************* example descriptor object:*************************
@@ -234,7 +231,7 @@ console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.displ
   
   function _parse() {
 //debug1
-console.log('[NFECT] ___________-------->>>>>>> parsing!');
+console.log('[NFECT]:['+_nfect.files[0]+']___________-------->>>>>>> parsing!');
     var plain = true,
       process = false;
     if(_nfect.output.parse) {
@@ -306,7 +303,7 @@ console.log('[NFECT] ___________-------->>>>>>> parsing!');
   
   function _process() {
 //debug1
-console.log('[NFECT] ___________-------->>>>>>> processing!');
+console.log('[NFECT]:['+_nfect.files[0]+'] ___________-------->>>>>>> processing!');
 /*
  * 
  * 
@@ -340,7 +337,7 @@ console.log('_______________ output.content.len:['+contentLength+']');
   //todo set up eventemitter for fileRead.complete() to trigger out()
   function _readFiles() {
 //debug1
-console.log('[NFECT] ___________-------->>>>>>> reading files!');
+console.log('[NFECT]:['+_nfect.files[0]+'] ___________-------->>>>>>> reading files!');
     var filesLength = _nfect.files.length,
       filesRead = 0,
       fs = require('fs');
