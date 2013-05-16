@@ -41,15 +41,17 @@ example: {
  
 var nfect = (function() {
 
+  // client store
+  var _clients = {};
   // internal data object
-  var _nfect = { };
+  var _nfect = {};
   
   // pub/sub/unsub pattern utility functions
   var _pubsub = (function() {
     // pub/sub/unsub pattern cache
-    var cache = { };
+    var cache = {};
     function _flush() {
-      cache = { };
+      cache = {};
     };
     function _pub(topic, args, scope) {
       if(cache[topic]) {
@@ -129,6 +131,14 @@ var nfect = (function() {
       version: 'v0.1.4'
     };
     _pubsub.pub('/nfect/formed');
+  };
+  
+  // generate random client ID
+  function _genID() {
+    // there's no reason you shouldn't just use a class-like variable
+    // to iterate and then store newly-created nfect objects in the 
+    // client array indexed to that iterated variable, like:
+    // for(i=0;i<20;i++) { nfect_client++; clients[nfect_client] = foo; }
   };
   
   // initialize the _nfect object
