@@ -26,6 +26,7 @@ var nfect = (function() {
       error: null,
       header: null,
       log: null,
+      method: null,
       request: null,
       response: null
     },
@@ -87,32 +88,31 @@ var nfect = (function() {
   };
 
   var _add = function(descriptor) {
-    if(++_app.calls == 1) {
-      if(_app.config.default && _app.config.default !== null) {
-         if(descriptor.default && descriptor.default !== null) {
-        _app.config.default = descriptor.default;
-      }
+    if(++_app.calls == 1 && descriptor.file && descriptor.file !== null) {
+      // yes, it's cool (http://es5.github.io/#x7.6)
+      _app.config.default = descriptor.file;
     }
     if(descriptor.file && descriptor.file !== null) {
       var entity = {
         file: descriptor.file;
       };
       _app.cache.push(new __File(descriptor));
+      return this;
     } else if(descriptor.files && descriptor.files !== null) {
       var files = descriptor.files.slice();
       delete descriptor.files;
       files.forEach(function(file) {
-        var descriptorCopy = {};
+        // shallow object copy
+        var descriptorNew = {};
         for(var key in descriptor) {
           if(descriptor.hasOwnProperty(key)) {
-            descriptorCopy[key] = descriptor[key];
+            descriptorNew[key] = descriptor[key];
           }
         }
-        descriptorCopy.file = file;
-        _add(descriptorCopy);
+        descriptorNew.file = file;
+        _add(descriptorNew);
       });
     }
-    return this;
   };
 
   var _build = function(descriptor) {
@@ -132,6 +132,9 @@ var nfect = (function() {
     }
     if(descriptor.log && descriptor.log !== null) {
       _app.config.log = descriptor.log;
+    }
+    if(descriptor.method && descriptor.method !== null) {
+      _app.config.method = descriptor.method;
     }
     if(descriptor.request && descriptor.request !== null) {
       _app.config.request = descriptor.request;
@@ -155,7 +158,12 @@ var nfect = (function() {
     // default configuration
     _app.nfect.request.path = _app.nfect.resources.url.parse(_app.config.request.url).pathname;
     var fileType = _app.nfect.request.path.substr(requestPath.lastIndexOf('.')+1);
-    _app.config.header['Content-Type'] = _app.nfect.mime[fileType];
+    var mimeType = _app.nfect.mime[fileType];
+    if(mimeType && mimeType !== null) {
+      _app.config.header['Content-Type'] = 'text/plain';
+    } else {
+      _app.config.header['Content-Type'] = _app.nfect.mime[fileType];
+    }
     _app.nfect.request.ID = _generateRID(_app.nfect.request.IDLength);
     // make sure we're the last function on the event queue
     setTimeout(_init(),0);
@@ -176,16 +184,24 @@ var nfect = (function() {
 //debug end
 
   var _init = function() {
-    _app.cache.forEach(function() {
-      if(_app.config.request.
+    // TODO FIX -- do some shit here!
+    _app.cache.forEach(function(file) {
+      if(_app.config.request.method == _app.config.method) {
+        if(_app.config.
+      } else if(_app.config.request.method == 'POST') {
+      } else {
+      }
     });
   };
 
   var _log = function() {
+    // TODO FIX -- log output
+    // method not yet implemented
   };
 
   var _out = function(status, summary) {
-    
+    // TODO FIX -- output stuff
+    // method not yet implemented
     _app.config.response.writeHead(status, summary, {'Content-Type': 'text/html'});
     _app.config.response.end(_app.data.errorHead+status+' '+summary+_app.data.errorTail);
   };
