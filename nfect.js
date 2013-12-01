@@ -40,8 +40,14 @@ var nfect = (function() {
         'gif': 'image/gif',
         'png': 'image/png'
       },
-      requestID: null,
-      requestIDLength: 12,
+      request: {
+        method: null,
+        ID: null,
+        IDLength: 12,
+        path: null,
+        timestamp: null,
+        url: null
+      },
       resources: {
         fs: require('fs'),
         http: require('http'),
@@ -50,6 +56,17 @@ var nfect = (function() {
       version: 'v0.2.1'
     }
   };
+
+//debug start
+  /*
+   * __File = {
+   *   file = 'index.html', // filename to serve
+   *   header = {}, // object collection of headers to serve with file
+   *   method = 'get', // method to accept ('get', 'post', 'both')
+   *   status = 200 // HTTP status code to serve file under
+   * };
+   */
+//debug end
 
   function __File(descriptor) {
     if(!(this instanceof __File)) {
@@ -61,11 +78,20 @@ var nfect = (function() {
     if(descriptor.header && descriptor.header !== null) {
       this.header = descriptor.header;
     }
+    if(descriptor.method && descriptor.method !== null) {
+      this.method = descriptor.method;
+    }
+    if(descriptor.status && descriptor.status !== null) {
+      this.status = descriptor.status;
+    }
   };
 
   var _add = function(descriptor) {
-    if(++_app.calls > 0 && descriptor.default && descriptor.default !== null) {
-      _app.config.default = descriptor.default;
+    if(++_app.calls == 1) {
+      if(_app.config.default && _app.config.default !== null) {
+         if(descriptor.default && descriptor.default !== null) {
+        _app.config.default = descriptor.default;
+      }
     }
     if(descriptor.file && descriptor.file !== null) {
       var entity = {
@@ -89,11 +115,8 @@ var nfect = (function() {
     return this;
   };
 
-  var _addFile = function(descriptor) {
-    // recursion on the _add instead, you pot-smoking hippie
-  };
-
   var _build = function(descriptor) {
+    // method not implemented yet
     return this;
   };
 
@@ -103,6 +126,12 @@ var nfect = (function() {
     }
     if(descriptor.error && descriptor.error !== null) {
       _app.config.error = descriptor.error;
+    }
+    if(descriptor.header && descriptor.header !== null) {
+      _app.config.header = descriptor.header;
+    }
+    if(descriptor.log && descriptor.log !== null) {
+      _app.config.log = descriptor.log;
     }
     if(descriptor.request && descriptor.request !== null) {
       _app.config.request = descriptor.request;
@@ -124,17 +153,31 @@ var nfect = (function() {
 
   var _go = function() {
     // default configuration
-    var requestPath = _app.nfect.resources.url.parse(_app.config.request.url).pathname;
-    var fileType = requestPath.substr(requestPath.lastIndexOf('.')+1);
+    _app.nfect.request.path = _app.nfect.resources.url.parse(_app.config.request.url).pathname;
+    var fileType = _app.nfect.request.path.substr(requestPath.lastIndexOf('.')+1);
     _app.config.header['Content-Type'] = _app.nfect.mime[fileType];
-    _app.nfect.requestID = _generateRID(_app.nfect.requestIDLength);
+    _app.nfect.request.ID = _generateRID(_app.nfect.request.IDLength);
     // make sure we're the last function on the event queue
     setTimeout(_init(),0);
   };
 
+//debug start
+/*
+    config: {
+      calls: 0,
+      default: 'index.html',
+      error: null,
+      header: null,
+      log: null,
+      request: null,
+      response: null
+    }
+ */
+//debug end
+
   var _init = function() {
     _app.cache.forEach(function() {
-      
+      if(_app.config.request.
     });
   };
 
