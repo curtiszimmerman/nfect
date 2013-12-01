@@ -1,5 +1,5 @@
-NFECT ## (Node.js Front-End Construction Tool)
-====
+NFECT (Node.js Front-End Construction Tool)
+===
 
 NFECT is a Node.js module for simple file output to the client. It uses 
 JavaScript method chaining to indicate loading, execution, and 
