@@ -19,9 +19,9 @@
 /**/
 var nfect = (function() {
   var _app = {
-    cache: {},
+    cache: [],
     config: {
-      call: 0,
+      calls: 0,
       default: 'index.html',
       error: null,
       header: null,
@@ -47,14 +47,48 @@ var nfect = (function() {
         http: require('http'),
         url: require('url')
       },
-      version: 'v0.2.0'
+      version: 'v0.2.1'
     }
   };
 
+  function __File(descriptor) {
+    if(!(this instanceof __File)) {
+      return new __File(descriptor);
+    }
+    
+  };
+
   var _add = function(descriptor) {
-    if(++_app.call > 0 && descriptor.default && descriptor.default !== null) {
+    if(++_app.calls > 0 && descriptor.default && descriptor.default !== null) {
       _app.config.default = descriptor.default;
     }
+    if(descriptor.file && descriptor.file !== null) {
+      var entity = {
+        file: descriptor.file;
+      };
+      _app.cache.push(new __File(descriptor));
+    } else if(descriptor.files && descriptor.files !== null) {
+      var files = descriptor.files.slice();
+      delete descriptor.files;
+      files.forEach(function(file) {
+        var descriptorCopy = {};
+        for(var key in descriptor) {
+          if(descriptor.hasOwnProperty(key)) {
+            descriptorCopy[key] = descriptor[key];
+          }
+        }
+        descriptorCopy.file = file;
+        _add(descriptorCopy);
+      });
+    }
+    return this;
+  };
+
+  var _addFile = function(descriptor) {
+    // recursion on the _add instead, you pot-smoking hippie
+  };
+
+  var _build = function(descriptor) {
     return this;
   };
 
@@ -62,14 +96,14 @@ var nfect = (function() {
     if(descriptor.default && descriptor.default !== null) {
       _app.config.default = descriptor.default;
     }
+    if(descriptor.error && descriptor.error !== null) {
+      _app.config.error = descriptor.error;
+    }
     if(descriptor.request && descriptor.request !== null) {
       _app.config.request = descriptor.request;
     }
     if(descriptor.response && descriptor.response !== null) {
       _app.config.response = descriptor.response;
-    }
-    if(descriptor.error && descriptor.error !== null) {
-      _app.config.error = descriptor.error;
     }
     return this;
   };
@@ -95,6 +129,7 @@ var nfect = (function() {
 
   var _init = function() {
     _app.cache.forEach(function() {
+      
     });
   };
 
@@ -109,6 +144,7 @@ var nfect = (function() {
 
   return {
     add: _add,
+    build: _build,
     config: _config,
     go: _go
   };
