@@ -55,7 +55,12 @@ var nfect = (function() {
     if(!(this instanceof __File)) {
       return new __File(descriptor);
     }
-    
+    if(descriptor.file && descriptor.file !== null) {
+      this.file = descriptor.file;
+    }
+    if(descriptor.header && descriptor.header !== null) {
+      this.header = descriptor.header;
+    }
   };
 
   var _add = function(descriptor) {
