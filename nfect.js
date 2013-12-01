@@ -23,7 +23,6 @@ var nfect = (function() {
     config: {
       call: 0,
       default: 'index.html',
-      defaultData: false,
       error: null,
       header: null,
       log: null,
@@ -62,6 +61,15 @@ var nfect = (function() {
   var _config = function(descriptor) {
     if(descriptor.default && descriptor.default !== null) {
       _app.config.default = descriptor.default;
+    }
+    if(descriptor.request && descriptor.request !== null) {
+      _app.config.request = descriptor.request;
+    }
+    if(descriptor.response && descriptor.response !== null) {
+      _app.config.response = descriptor.response;
+    }
+    if(descriptor.error && descriptor.error !== null) {
+      _app.config.error = descriptor.error;
     }
     return this;
   };

@@ -2,8 +2,8 @@ NFECT (Node.js Front-End Construction Tool)
 ====
 
 NFECT is a Node.js module for simple file output to the client. It uses 
-JavaScript to specify a "descriptor" to indicate loading, execution, 
-and code-inclusion details for external file and source code dependencies. 
+JavaScript method chaining to indicate loading, execution, and 
+code-inclusion details for external file and source code dependencies. 
 The vision is to provide a mechanism for front-end developers to easily 
 incorporate many dependencies (such as common header and footer HTML files, 
 CSS files, and client-side JavaScript files) without needing to learn and 
@@ -20,25 +20,46 @@ to all requests using NFECT to output an `index.html` file to the client.
 
 ```javascript
 var server = http.createServer(function(req, res) {
-  var nfect = require('../nfect');
-  nfect('./index.html', res);
+  var nfect = require('./nfect');
+  nfect.config({
+    request: req, response: res
+  }).go();
 }).listen(80);
 ```
 
 The following Node.js example initializes an HTTP server that responds to 
-requests for `index.html` using NFECT and a simple descriptor to build 
-a single output file from several input files. The descriptor also 
-specifies a custom `Expires` HTTP header for caching purposes.
+requests for `index.html` using NFECT and a single method to build 
+a multiple-page server using several different files. The method also 
+specifies a custom `Expires` HTTP header for each of the files.
 
 ```javascript
 var server = http.createServer(function(req, res) {
-  if(req.url == '/index.html') {
-    var nfect = require('../nfect');
-    nfect({
-      files: ['./header.html','./body.html','./footer.html'],
-      headers: { 'Expires': 'Wed, 01 Jan 2014 16:00:00 GMT' }
-    }, res);
-  }
+  var nfect = require('../nfect');
+  nfect.config({
+    request: req, response: res
+  }).add({
+    files: ['index.html','default.css','site.js'],
+    header: {
+      'Expires': 'Wed, 01 Jan 2014 16:00:00 GMT'
+    }
+  }).go();
+}).listen(80);
+```
+
+Below is an NFECT example that constructs an HTTP server which responds to 
+requests for `index.html` using NFECT's build utility to combine multiple
+independent files into one output file. Compare this functionality to a 
+more traditional `include()` function in other languages.
+
+```javascript
+var server = http.createServer(function(req, res) {
+  var nfect = require('./nfect');
+  nfect.config({
+    request: req, response: res
+  }).build({
+    files: ['header.inc','body.html','footer.inc'],
+    match: 'index.html'
+  }).go();
 }).listen(80);
 ```
 
