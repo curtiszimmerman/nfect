@@ -113,11 +113,25 @@ var nfect = (function() {
 
   var _add = function(descriptor) {
     _console.log('.add()');
-    if(++_app.calls == 1 && descriptor.file && descriptor.file !== null) {
-      // yes, it's cool (http://es5.github.io/#x7.6)
-      _app.config.default = descriptor.file;
+//debug1
+console.log('_app.calls:['+_app.config.calls+']descriptor['+descriptor+']');
+    if(++_app.config.calls == 1) {
+//debug1
+console.log('first .add() call!');
+      if(descriptor.file && descriptor.file !== null) {
+//debug1
+console.log('_app.config.defalt:['+_app.config.default+']');
+        // yes, it's cool (http://es5.github.io/#x7.6)
+        _app.config.default = descriptor.file;
+      } else {
+//debug1
+console.log('_app.config.default:['+_app.config.default+']');
+        descriptor.file = _app.config.default;
+      }
     }
     if(descriptor.file && descriptor.file !== null) {
+//debug1
+console.log('pushing new __File()!');
       _app.cache.push(new __File(descriptor));
       return this;
     } else if(descriptor.files && descriptor.files !== null) {
@@ -239,7 +253,10 @@ var nfect = (function() {
 //debug1
 console.log('_init():10');
 //debug1
-console.log('_app.cache:['+_app.cache.length+']');
+console.log('_app.cache:['+_app.cache+']_app.cache.len:['+_app.cache.length+']');
+//debug2
+_app.cache = [];
+console.log('_app.cache2:['+_app.cache+']_app.cache.len2:['+_app.cache.length+']');
     _app.cache.forEach(function(file) {
 //debug1
 console.log('_init():15');
