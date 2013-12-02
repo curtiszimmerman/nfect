@@ -93,10 +93,6 @@ var nfect = (function() {
       _app.config.default = descriptor.file;
     }
     if(descriptor.file && descriptor.file !== null) {
-//debug3 -- this is probably not needed
-      var entity = {
-        file: descriptor.file
-      };
       _app.cache.push(new __File(descriptor));
       return this;
     } else if(descriptor.files && descriptor.files !== null) {
@@ -172,14 +168,6 @@ var nfect = (function() {
 
   var _go = function() {
     // default configuration
-    _app.nfect.request.path = _app.nfect.resources.url.parse(_app.config.request.url).pathname;
-    var fileType = _app.nfect.request.path.substr(_app.nfect.request.path.lastIndexOf('.')+1);
-    var mimeType = _app.nfect.mime[fileType];
-    if(mimeType && mimeType !== null) {
-      _app.config.header['Content-Type'] = mimeType;
-    } else {
-      _app.config.header['Content-Type'] = 'text/plain';
-    }
     _app.nfect.request.ID = _generateRID(_app.nfect.request.IDLength);
     // make sure we're the last function on the event queue
     setTimeout(_init(),0);
@@ -202,6 +190,9 @@ var nfect = (function() {
 
   var _init = function() {
     // TODO FIX -- do some shit here!
+    if(_app.cache.length == 0) {
+      _add({ method: 'get' });
+    }
     // general general configuration mismatch errors
     if(_app.config.method && _app.config.method !== null) {
       if(_app.config.request.method !== _app.config.method) {
@@ -211,10 +202,21 @@ var nfect = (function() {
     }
     _app.cache.forEach(function(file) {
       // attempt to route
-      if(_app.config.request.method == _app.config.method) {
-        //if(_app.config.request
-      } else if(_app.config.request.method == 'POST') {
+      if(_app.config.request.url !== file.file) {
+        return false;
       } else {
+        _app.nfect.request.path = _app.nfect.resources.url.parse(_app.config.request.url).pathname;
+        var fileType = _app.nfect.request.path.substr(_app.nfect.request.path.lastIndexOf('.')+1);
+        var mimeType = _app.nfect.mime[fileType];
+        if(mimeType && mimeType !== null) {
+          _app.config.header['Content-Type'] = mimeType;
+        } else {
+          _app.config.header['Content-Type'] = 'text/plain';
+        }
+        if(_app.config.request.method == _app.config.method) {
+        } else if(_app.config.request.method == 'POST') {
+        } else {
+        }
       }
     });
   };
