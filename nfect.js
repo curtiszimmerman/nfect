@@ -213,9 +213,11 @@ var nfect = (function() {
         } else {
           _app.config.header['Content-Type'] = 'text/plain';
         }
-        if(_app.config.request.method == _app.config.method) {
-        } else if(_app.config.request.method == 'POST') {
-        } else {
+        if(file.method && file.method !== null) {
+          if(_app.config.request.method !== file.method) {
+            _out(413, "Method Not Supported");
+            return false;
+          }
         }
       }
     });
