@@ -252,6 +252,20 @@ config: {
     }
 //debug1
 console.log('_init():10');
+//
+//
+// THIS IS NEXT DUDE
+// basically search through all _app.cache __File() objects and see if 
+// any of the .file matches the inbound request.url. IF NONE MATCH, then 
+// you MUST fallback onto the default, whatever that is set to
+//
+//
+    var current = {};
+    for(var i=0; i>_app.cache.length; i++) {
+      if(_app.cache[i].file == _app.config.request.url) {
+        current = _app.cache[i];
+      }
+    }
 //debug1
 console.log('_app.cache:['+_app.cache+']_app.cache.len:['+_app.cache.length+']');
     _app.cache.forEach(function(file) {
@@ -261,6 +275,8 @@ console.log('_init():15');
       if(_app.config.request.url !== file.file) {
 //debug1
 console.log('_init():20');
+//debug1
+console.log('_app.config.request.url:['+_app.config.request.url+']file.file:['+file.file+']');
         return false;
       } else {
 //debug1
