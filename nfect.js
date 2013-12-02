@@ -33,6 +33,7 @@ var nfect = (function() {
     nfect: {
       errorHead: '<!doctype html><html><head><meta charset="utf-8"></head><body>',
       errorTail: '</body></html>',
+      loglevel: 2,
       mime: {
         'css': 'text/css',
         'html': 'text/html',
@@ -54,9 +55,32 @@ var nfect = (function() {
         http: require('http'),
         url: require('url')
       },
-      version: 'v0.2.1'
+      version: 'v0.2.2'
     }
   };
+
+  var _console = (function(loglevel) {
+    loglevel = (typeof(loglevel) === 'number') ? loglevel : 2;
+    var _error = function(message) {
+      _output(message, 0, ['[!]']);
+    };
+    var _log = function(message, level) {
+      level = (typeof(level) === 'number') ? level : 2;
+      _output(message, level, ['[*]','[+]','[=]','[-]']);
+    };
+    var _output = function(message, level, notice) {
+      if(level <= loglevel) {
+        if(level > 3) {
+          level = 3;
+        }
+        console.log(notice[level]+' '+message);
+      }
+    };
+    return {
+      err: _error,
+      log: _log
+    };
+  })(_app.nfect.loglevel);
 
 //debug start
   /*
@@ -88,6 +112,7 @@ var nfect = (function() {
   };
 
   var _add = function(descriptor) {
+    _console.log('.add()');
     if(++_app.calls == 1 && descriptor.file && descriptor.file !== null) {
       // yes, it's cool (http://es5.github.io/#x7.6)
       _app.config.default = descriptor.file;
@@ -113,6 +138,7 @@ var nfect = (function() {
   };
 
   var _build = function(descriptor) {
+    _console.log('.build()');
     // method not implemented yet
     return this;
   };
@@ -131,6 +157,7 @@ var nfect = (function() {
 */
 
   var _config = function(descriptor) {
+    _console.log('.config()');
     if(descriptor.default && descriptor.default !== null) {
       _app.config.default = descriptor.default;
     }
@@ -155,6 +182,16 @@ var nfect = (function() {
       _app.config.response = descriptor.response;
     }
     return this;
+  };
+
+  var _error = function(status, summary) {
+    if(_app.config.log && _app.config.log !== null) {
+      _log(status, summary);
+    }
+    // TODO FIX -- output stuff
+    // method not yet implemented
+    _app.config.response.writeHead(status, summary, {'Content-Type': 'text/html'});
+    _app.config.response.end(_app.data.errorHead+status+' '+summary+_app.data.errorTail);
   };
 
   var _generateRID = function(RIDLength) {
@@ -196,7 +233,7 @@ var nfect = (function() {
     // general general configuration mismatch errors
     if(_app.config.method && _app.config.method !== null) {
       if(_app.config.request.method !== _app.config.method) {
-        _out(413, "Method Not Supported");
+        _error(413, "Method Not Supported");
         return false;
       }
     }
@@ -215,22 +252,34 @@ var nfect = (function() {
         }
         if(file.method && file.method !== null) {
           if(_app.config.request.method !== file.method) {
-            _out(413, "Method Not Supported");
+            _error(413, "Method Not Supported");
             return false;
           }
         }
+        if(_app.config.header && _app.config.header !== null) {
+          for(header in _app.config.header) {
+            if(_app.config.header.hasOwnProperty(header)) {
+              file.header[header] = _app.config.header[header];
+            }
+          }
+        }
+        _out(file);
       }
     });
   };
 
-  var _log = function() {
+  var _log = function(status, summary) {
     // TODO FIX -- log output
     // method not yet implemented
+    _app.nfect.resources.fs.writeFile(_app.config.log, status+': '+summary, function(err) {
+      if(err) _console.log(err);
+    });
   };
 
-  var _out = function(status, summary) {
+  var _out = function(descriptor) {
+    _console.log('Completing HTTP Request');
     if(_app.config.log && _app.config.log !== null) {
-      _log(413, "Method Not Supported");
+      _log(0, 'Completing HTTP request');
     }
     // TODO FIX -- output stuff
     // method not yet implemented
