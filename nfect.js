@@ -190,8 +190,6 @@ var nfect = (function() {
     }
     // TODO FIX -- output stuff
     // method not yet implemented
-    _app.config.response.writeHead(status, summary, {'Content-Type': 'text/html'});
-    _app.config.response.end(_app.data.errorHead+status+' '+summary+_app.data.errorTail);
   };
 
   var _generateRID = function(RIDLength) {
@@ -204,6 +202,9 @@ var nfect = (function() {
   };
 
   var _go = function() {
+    if(_app.cache.length == 0) {
+      _add({ method: 'get' });
+    }
     // default configuration
     _app.nfect.request.ID = _generateRID(_app.nfect.request.IDLength);
     // make sure we're the last function on the event queue
@@ -226,10 +227,8 @@ var nfect = (function() {
 //debug end
 
   var _init = function() {
+    _console.log('_init()');
     // TODO FIX -- do some shit here!
-    if(_app.cache.length == 0) {
-      _add({ method: 'get' });
-    }
     // general general configuration mismatch errors
     if(_app.config.method && _app.config.method !== null) {
       if(_app.config.request.method !== _app.config.method) {
@@ -237,11 +236,21 @@ var nfect = (function() {
         return false;
       }
     }
+//debug1
+console.log('_init():10');
+//debug1
+console.log('_app.cache:['+_app.cache.length+']');
     _app.cache.forEach(function(file) {
+//debug1
+console.log('_init():15');
       // attempt to route
       if(_app.config.request.url !== file.file) {
+//debug1
+console.log('_init():20');
         return false;
       } else {
+//debug1
+console.log('_init():25');
         _app.nfect.request.path = _app.nfect.resources.url.parse(_app.config.request.url).pathname;
         var fileType = _app.nfect.request.path.substr(_app.nfect.request.path.lastIndexOf('.')+1);
         var mimeType = _app.nfect.mime[fileType];
@@ -250,12 +259,16 @@ var nfect = (function() {
         } else {
           _app.config.header['Content-Type'] = 'text/plain';
         }
+//debug1
+console.log('_init():30');
         if(file.method && file.method !== null) {
           if(_app.config.request.method !== file.method) {
             _error(413, "Method Not Supported");
             return false;
           }
         }
+//debug1
+console.log('_init():40');
         if(_app.config.header && _app.config.header !== null) {
           for(header in _app.config.header) {
             if(_app.config.header.hasOwnProperty(header)) {
@@ -277,9 +290,9 @@ var nfect = (function() {
   };
 
   var _out = function(descriptor) {
-    _console.log('Completing HTTP Request');
+    _console.log('_out()');
     if(_app.config.log && _app.config.log !== null) {
-      _log(0, 'Completing HTTP request');
+      _log(0, '_out()');
     }
     // TODO FIX -- output stuff
     // method not yet implemented

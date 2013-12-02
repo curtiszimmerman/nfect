@@ -1,6 +1,6 @@
 {
   "name": "NFECT",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "NFECT is a Node.js module for simple file output to the client.",
   "main": "nfect.js",
   "scripts": {
