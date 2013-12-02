@@ -55,7 +55,7 @@ var nfect = (function() {
         http: require('http'),
         url: require('url')
       },
-      version: 'v0.2.2'
+      version: 'v0.2.3'
     }
   };
 
@@ -158,16 +158,16 @@ console.log('pushing new __File()!');
   };
 
 /*
-    config: {
-      calls: 0,
-      default: 'index.html',
-      error: null,
-      header: null,
-      log: null,
-      method: null,
-      request: null,
-      response: null
-    }
+config: {
+  calls: 0,
+  default: 'index.html',
+  error: null,
+  header: null,
+  log: null,
+  method: null,
+  request: null,
+  response: null
+}
 */
 
   var _config = function(descriptor) {
@@ -254,9 +254,6 @@ console.log('pushing new __File()!');
 console.log('_init():10');
 //debug1
 console.log('_app.cache:['+_app.cache+']_app.cache.len:['+_app.cache.length+']');
-//debug2
-_app.cache = [];
-console.log('_app.cache2:['+_app.cache+']_app.cache.len2:['+_app.cache.length+']');
     _app.cache.forEach(function(file) {
 //debug1
 console.log('_init():15');
