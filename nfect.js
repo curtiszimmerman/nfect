@@ -24,7 +24,7 @@ var nfect = (function() {
       calls: 0,
       default: 'index.html',
       error: null,
-      header: null,
+      header: {},
       log: null,
       method: null,
       request: null,
@@ -93,8 +93,9 @@ var nfect = (function() {
       _app.config.default = descriptor.file;
     }
     if(descriptor.file && descriptor.file !== null) {
+//debug3 -- this is probably not needed
       var entity = {
-        file: descriptor.file;
+        file: descriptor.file
       };
       _app.cache.push(new __File(descriptor));
       return this;
@@ -120,6 +121,19 @@ var nfect = (function() {
     return this;
   };
 
+/*
+    config: {
+      calls: 0,
+      default: 'index.html',
+      error: null,
+      header: null,
+      log: null,
+      method: null,
+      request: null,
+      response: null
+    }
+*/
+
   var _config = function(descriptor) {
     if(descriptor.default && descriptor.default !== null) {
       _app.config.default = descriptor.default;
@@ -129,6 +143,8 @@ var nfect = (function() {
     }
     if(descriptor.header && descriptor.header !== null) {
       _app.config.header = descriptor.header;
+    } else {
+      _app.config.header = {};
     }
     if(descriptor.log && descriptor.log !== null) {
       _app.config.log = descriptor.log;
@@ -157,12 +173,12 @@ var nfect = (function() {
   var _go = function() {
     // default configuration
     _app.nfect.request.path = _app.nfect.resources.url.parse(_app.config.request.url).pathname;
-    var fileType = _app.nfect.request.path.substr(requestPath.lastIndexOf('.')+1);
+    var fileType = _app.nfect.request.path.substr(_app.nfect.request.path.lastIndexOf('.')+1);
     var mimeType = _app.nfect.mime[fileType];
     if(mimeType && mimeType !== null) {
-      _app.config.header['Content-Type'] = 'text/plain';
+      _app.config.header['Content-Type'] = mimeType;
     } else {
-      _app.config.header['Content-Type'] = _app.nfect.mime[fileType];
+      _app.config.header['Content-Type'] = 'text/plain';
     }
     _app.nfect.request.ID = _generateRID(_app.nfect.request.IDLength);
     // make sure we're the last function on the event queue
@@ -177,6 +193,7 @@ var nfect = (function() {
       error: null,
       header: null,
       log: null,
+      method: null,
       request: null,
       response: null
     }
@@ -185,9 +202,17 @@ var nfect = (function() {
 
   var _init = function() {
     // TODO FIX -- do some shit here!
+    // general general configuration mismatch errors
+    if(_app.config.method && _app.config.method !== null) {
+      if(_app.config.request.method !== _app.config.method) {
+        _out(413, "Method Not Supported");
+        return false;
+      }
+    }
     _app.cache.forEach(function(file) {
+      // attempt to route
       if(_app.config.request.method == _app.config.method) {
-        if(_app.config.
+        //if(_app.config.request
       } else if(_app.config.request.method == 'POST') {
       } else {
       }
@@ -200,6 +225,9 @@ var nfect = (function() {
   };
 
   var _out = function(status, summary) {
+    if(_app.config.log && _app.config.log !== null) {
+      _log(413, "Method Not Supported");
+    }
     // TODO FIX -- output stuff
     // method not yet implemented
     _app.config.response.writeHead(status, summary, {'Content-Type': 'text/html'});
@@ -248,4 +276,4 @@ nfect.config(
 ********************************************************************* */
 
 /* export module functions */
-module.exports = nfect.nfect;
+module.exports = nfect;
