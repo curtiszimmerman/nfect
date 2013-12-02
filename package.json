@@ -1,9 +1,13 @@
 {
   "name": "NFECT",
 <<<<<<< HEAD
+<<<<<<< HEAD
   "version": "0.2.1",
 =======
   "version": "0.2.2",
+>>>>>>> development
+=======
+  "version": "0.2.3",
 >>>>>>> development
   "description": "NFECT is a Node.js module for simple file output to the client.",
   "main": "nfect.js",
