@@ -260,19 +260,19 @@ console.log('_init():10');
 // you MUST fallback onto the default, whatever that is set to
 //
 //
-    var current = {};
-    for(var i=0; i>_app.cache.length; i++) {
-      if(_app.cache[i].file == _app.config.request.url) {
-        current = _app.cache[i];
-      }
-    }
+//    var current = {};
+//    for(var i=0; i>_app.cache.length; i++) {
+//      if(_app.cache[i].file == _app.config.request.url) {
+//        current = _app.cache[i];
+//      }
+//    }
 //debug1
 console.log('_app.cache:['+_app.cache+']_app.cache.len:['+_app.cache.length+']');
-    _app.cache.forEach(function(file) {
+    _app.cache.forEach(function(file, index, cache) {
 //debug1
 console.log('_init():15');
       // attempt to route
-      if(_app.config.request.url !== file.file) {
+      if(_app.config.request.url !== file.file && index < _app.cache.length) {
 //debug1
 console.log('_init():20');
 //debug1
@@ -281,6 +281,12 @@ console.log('_app.config.request.url:['+_app.config.request.url+']file.file:['+f
       } else {
 //debug1
 console.log('_init():25');
+        // test for default-ness
+        if(index == _app.cache.length) {
+          var defaultFile = true;
+        } else {
+          var defaultFile = false;
+        }
         _app.nfect.request.path = _app.nfect.resources.url.parse(_app.config.request.url).pathname;
         var fileType = _app.nfect.request.path.substr(_app.nfect.request.path.lastIndexOf('.')+1);
         var mimeType = _app.nfect.mime[fileType];
