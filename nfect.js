@@ -272,7 +272,7 @@ console.log('_app.cache:['+_app.cache+']_app.cache.len:['+_app.cache.length+']')
 //debug1
 console.log('_init():15');
       // attempt to route
-      if(_app.config.request.url !== file.file && index < _app.cache.length) {
+      if((_app.config.request.url !== file.file) && (index+1 < _app.cache.length)) {
 //debug1
 console.log('_init():20');
 //debug1
