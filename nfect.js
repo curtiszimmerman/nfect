@@ -128,10 +128,25 @@ console.log('_app.config.defalt:['+_app.config.default+']');
 console.log('_app.config.default:['+_app.config.default+']');
         descriptor.file = _app.config.default;
       }
+      if(descriptor.method && descriptor.method !== null) {
+//debug1
+console.log('descriptor.method:['+descriptor.method+']');
+      } else {
+//debug1
+console.log('descriptor.method:['+descriptor.method+']');
+      }
     }
     if(descriptor.file && descriptor.file !== null) {
 //debug1
 console.log('pushing new __File()!');
+//debug start
+console.log('DESCRIPTOR:');
+for(var prop in descriptor) {
+  if(descriptor.hasOwnProperty(prop) {
+    console.log('property=>['+prop+']');
+  }
+}
+//debug end
       _app.cache.push(new __File(descriptor));
       return this;
     } else if(descriptor.files && descriptor.files !== null) {
@@ -188,6 +203,8 @@ config: {
     }
     if(descriptor.method && descriptor.method !== null) {
       _app.config.method = descriptor.method;
+    } else {
+      _app.config.method = 'GET';
     }
     if(descriptor.request && descriptor.request !== null) {
       _app.config.request = descriptor.request;
@@ -217,7 +234,7 @@ config: {
 
   var _go = function() {
     if(_app.cache.length == 0) {
-      _add({ method: 'get' });
+      _add({ method: 'GET' });
     }
     // default configuration
     _app.nfect.request.ID = _generateRID(_app.nfect.request.IDLength);
