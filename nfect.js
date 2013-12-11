@@ -142,7 +142,7 @@ console.log('pushing new __File()!');
 //debug start
 console.log('DESCRIPTOR:');
 for(var prop in descriptor) {
-  if(descriptor.hasOwnProperty(prop) {
+  if(descriptor.hasOwnProperty(prop)) {
     console.log('property=>['+prop+']');
   }
 }
@@ -286,6 +286,14 @@ console.log('_init():10');
 //debug1
 console.log('_app.cache:['+_app.cache+']_app.cache.len:['+_app.cache.length+']');
     _app.cache.forEach(function(file, index, cache) {
+//debug start
+console.log('CACHE OBJECT:');
+for(var prop in file) {
+  if(file.hasOwnProperty(prop)) {
+    console.log('property=>['+prop+']');
+  }
+}
+//debug end
 //debug1
 console.log('_init():15');
       // attempt to route
