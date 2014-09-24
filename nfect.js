@@ -14,6 +14,7 @@
  *   See below for callback notes.
  * -- NFECT attempts to detect output type based on file extension.
 <<<<<<< HEAD
+<<<<<<< HEAD
  * -- NFECT accepts a callback function instead of (or in addition to)
  *   a client connection object. On error, information about error is 
  *   passed to callback as first argument. Otherwise output is passed 
@@ -502,6 +503,8 @@ console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
 	};
 }());
 =======
+=======
+>>>>>>> a4365a5aafedcc4b8ba37961baddbdbfc8d46c1b
  */
 
 
@@ -756,6 +759,7 @@ config: {
         return false;
       }
     }
+<<<<<<< HEAD
 //debug1
 console.log('_init():10');
 //
@@ -810,6 +814,62 @@ console.log('_init():25');
           _app.config.header['Content-Type'] = 'text/plain';
         }
 //debug1
+=======
+//debug1
+console.log('_init():10');
+//
+//
+// THIS IS NEXT DUDE
+// basically search through all _app.cache __File() objects and see if 
+// any of the .file matches the inbound request.url. IF NONE MATCH, then 
+// you MUST fallback onto the default, whatever that is set to
+//
+//
+//    var current = {};
+//    for(var i=0; i>_app.cache.length; i++) {
+//      if(_app.cache[i].file == _app.config.request.url) {
+//        current = _app.cache[i];
+//      }
+//    }
+//debug1
+console.log('_app.cache:['+_app.cache+']_app.cache.len:['+_app.cache.length+']');
+    _app.cache.forEach(function(file, index, cache) {
+//debug start
+console.log('CACHE OBJECT:');
+for(var prop in file) {
+  if(file.hasOwnProperty(prop)) {
+    console.log('property=>['+prop+']');
+  }
+}
+//debug end
+//debug1
+console.log('_init():15');
+      // attempt to route
+      if((_app.config.request.url !== file.file) && (index+1 < _app.cache.length)) {
+//debug1
+console.log('_init():20');
+//debug1
+console.log('_app.config.request.url:['+_app.config.request.url+']file.file:['+file.file+']');
+        return false;
+      } else {
+//debug1
+console.log('_init():25');
+        // test for default-ness
+        if(index == _app.cache.length) {
+          var defaultFile = true;
+        } else {
+          var defaultFile = false;
+        }
+        _app.nfect.request.path = _app.nfect.resources.url.parse(_app.config.request.url).pathname;
+        var fileType = _app.nfect.request.path.substr(_app.nfect.request.path.lastIndexOf('.')+1);
+        var mimeType = _app.nfect.mime[fileType];
+        if(mimeType && mimeType !== null) {
+          _app.config.header['Content-Type'] = mimeType;
+        } else {
+          _app.config.header['Content-Type'] = 'text/plain';
+        }
+//debug1
+>>>>>>> a4365a5aafedcc4b8ba37961baddbdbfc8d46c1b
 console.log('_init():30');
         if(file.method && file.method !== null) {
           if(_app.config.request.method !== file.method) {
@@ -890,7 +950,10 @@ nfect.config(
   status: 200 //default 200
 ).go();
 ********************************************************************* */
+<<<<<<< HEAD
 >>>>>>> 171de254e2c1017bfd6b0888ccd70d5e7bb69799
+=======
+>>>>>>> a4365a5aafedcc4b8ba37961baddbdbfc8d46c1b
 
 /* export module functions */
 module.exports = nfect;
