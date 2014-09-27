@@ -585,14 +585,19 @@ module.exports = exports = nfect = (function() {
 	/**
 	 * add: adds a resource to nfect's resource tracker
 	 * build: builds a resource from multiple discrete files
+	 * bind: bind a callback to an event
 	 * config: assert a configuration for nfect
+	 * fire: fire an event to trigger callback
+	 *   (or just use on() and on() will detect if it gets a string or a string and a function)
 	 * go: execute nfect and provide optional callback
 	 * on: subscribe or publish events
 	 */
 	return {
 		add: _add,
 		build: _build,
+		bind: _bind,
 		config: _config,
+		fire: _fire,
 		go: _go,
 		on: _on
 	};
