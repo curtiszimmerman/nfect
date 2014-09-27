@@ -1,7 +1,12 @@
-/*
- *  nfect.js -- Node.js Front-End Construction Tool
- *  pass in an object describing the files and their function and 
- *  nfect outputs it properly to the client
+/**
+ * @project nfect
+ * nfect.js -- Node.js Front-End Construction Tool
+ * @file nfect.js
+ * primary application driver (node.js module)
+ * @author curtis zimmerman
+ * @contact hello@curtisz.com
+ * @license BSD3
+ * @version 0.0.1b
  */
  
 /*
@@ -13,7 +18,6 @@
  * -- On error, NFECT logs messages to console and optionally logfile.
  *   See below for callback notes.
  * -- NFECT attempts to detect output type based on file extension.
-<<<<<<< HEAD
  * -- NFECT accepts a callback function instead of (or in addition to)
  *   a client connection object. On error, information about error is 
  *   passed to callback as first argument. Otherwise output is passed 
@@ -204,14 +208,35 @@ module.exports = exports = nfect = (function() {
 		};
 	}());
 	
-	getID: function( length ) {
-		for (
-			var i=0, id='', length=(typeof(length) === 'number') ? length : 8, chr='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-			i<length;
-			i++, id+=chr.substr(Math.floor(Math.random()*chr.length),1)
-		);
-		return id;
-	}
+	var $func = {
+		getID: function( length ) {
+			for (
+				var i=0, id='', length=(typeof(length) === 'number') ? length : 8, chr='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+				i<length;
+				i++, id+=chr.substr(Math.floor(Math.random()*chr.length),1)
+			);
+			return id;
+		},
+		isEmpty: function( obj ) {
+			for(var prop in obj) {
+				if(obj.hasOwnProperty(prop)) return false;
+			}
+			return true;
+		},
+		out: function() {
+			//@fix update for new descriptor rules
+			//@todo return output instead of writing output to connection
+			if(_nfect.output.display === true) {
+				var output = _nfect.output.content.join('');
+				// add content-length to our headers
+				_nfect.output.headers['Content-Length'] = output.length;
+				_nfect.conn.writeHead(_nfect.output.status, _nfect.output.headers);
+				_nfect.conn.write(output);
+				_nfect.conn.end();
+			}
+			_pubsub.pub('/nfect/callback');
+		}
+	};
 	
 	// initialize the _nfect object
 	function _init() {
@@ -287,37 +312,13 @@ module.exports = exports = nfect = (function() {
 		_pubsub.pub('/nfect/initialized');
 	};
 	
-	//utility function for determining emptiness of object
-	function _isEmpty(obj) {
-		for(var prop in obj) {
-			if(obj.hasOwnProperty(prop)) return false;
-		}
-		return true;
-	};
-	
-	//FIX -- update for new descriptor rules
-	//todo return output instead of writing output to connection
-	function _out() {
-//debug1
-console.log('*** [NFECT].(out).writing!:['+_nfect.output.content+'] output.display['+_nfect.output.display+']');
-		if(_nfect.output.display === true) {
-			var output = _nfect.output.content.join('');
-			// add content-length to our headers
-			_nfect.output.headers['Content-Length'] = output.length;
-			_nfect.conn.writeHead(_nfect.output.status, _nfect.output.headers);
-			_nfect.conn.write(output);
-			_nfect.conn.end();
-		}
-		_pubsub.pub('/nfect/callback');
-	};
-	
 	function _parse() {
 //debug1
 console.log('[NFECT]:['+_nfect.files[0]+']___________-------->>>>>>> parsing!');
 		var plain = true,
 			process = false;
 		if(_nfect.output.parse) {
-			if(!_isEmpty(_nfect.descriptor) && _nfect.descriptor.files && _nfect.descriptor.files.length > 0) {
+			if(!$func.isEmpty(_nfect.descriptor) && _nfect.descriptor.files && _nfect.descriptor.files.length > 0) {
 				// copy descriptor files array to nfect storage array
 				_nfect.files = _nfect.descriptor.files;
 			} else {
@@ -332,11 +333,11 @@ console.log('[NFECT]:['+_nfect.files[0]+']___________-------->>>>>>> parsing!');
 				process = false;
 			}
 			// data for input files
-			if(!_isEmpty(_nfect.descriptor.data) && _nfect.descriptor.data) {
+			if(!$func.isEmpty(_nfect.descriptor.data) && _nfect.descriptor.data) {
 				_nfect.data = _nfect.descriptor.data;
 			}
 			// additional headers
-			if(!_isEmpty(_nfect.descriptor.headers) && _nfect.descriptor.headers) {
+			if(!$func.isEmpty(_nfect.descriptor.headers) && _nfect.descriptor.headers) {
 				for(var header in _nfect.descriptor.headers) {
 					_nfect.output.headers[header] = _nfect.descriptor.headers[header];
 				}
@@ -465,7 +466,7 @@ console.log('===--->>> [NFECT].(basic) FIRST DUMP OF FILE:['+contents+']');
 			_nfect.type = 'error';
 			_nfect.error.number = num;
 			_nfect.error.message = msg;
-			if(_nfect.conn && typeof(_nfect.conn) === 'object' && !_isEmpty(_nfect.conn)) {
+			if(_nfect.conn && typeof(_nfect.conn) === 'object' && !$func.isEmpty(_nfect.conn)) {
 				_nfect.conn.writeHead(500, { 'Content-Type': 'text/plain' });
 				_nfect.conn.write('NFECT Error '+_nfect.error.number+': '+_nfect.error.message);
 				_nfect.conn.end();
@@ -751,7 +752,7 @@ config: {
     _console.log('_init()');
     // TODO FIX -- do some shit here!
     // general general configuration mismatch errors
-    if(_app.config.method && _app.config.method !== null) {
+    if(typeof(_app.config.method) !== 'undefined') {
       if(_app.config.request.method !== _app.config.method) {
         _error(413, "Method Not Supported");
         return false;
@@ -891,7 +892,3 @@ nfect.config(
   status: 200 //default 200
 ).go();
 ********************************************************************* */
->>>>>>> 171de254e2c1017bfd6b0888ccd70d5e7bb69799
-
-/* export module functions */
-module.exports = nfect;
