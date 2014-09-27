@@ -49,76 +49,57 @@ module.exports = exports = nfect = (function() {
 	// client store
 	var _clients = {};
 	// internal data object
-	var _nfect = {};
+	var $nfect = {};
 	
 	var $app = {
 		cache: [],
-		config: {
-			calls: 0,
-			default: 'index.html',
-			error: null,
-			header: {},
-			log: null,
-			method: null,
-			request: null,
-			response: null
-		},
-		nfect: {
-			content: {
-				error: {
-					head: ,
-					tail: 
-				}
-			},
-			errorHead: '<!doctype html><html><head><meta charset="utf-8"></head><body>',
-			errorTail: '</body></html>',
+		settings: {
 			loglevel: 2,
-			mime: {
-				'css': 'text/css',
-				'html': 'text/html',
-				'js': 'application/javascript',
-				'jpg': 'image/jpeg',
-				'gif': 'image/gif',
-				'png': 'image/png'
-			},
-			request: {
-				method: null,
-				ID: null,
-				IDLength: 12,
-				path: null,
-				timestamp: null,
-				url: null
-			},
 			resources: {
 				fs: require('fs'),
 				http: require('http'),
 				url: require('url')
 			},
-			version: 'v0.2.3'
+			version: 'v0.0.1b'
 		}
 	};
 
 	/**
-	 * fire up the _nfect storage object
+	 * fire up the $nfect storage object
 	 */
 	var $nfect = {
-		// initial arguments
-		args: args,
-		// callback if provided
-		callback: {},
-		// web server connection
-		conn: {},
-		// this is how we encapsulate and transport data from outside
-		data: {},
-		// internal copy of the use descriptor
-		descriptor: {},
-		// nfect error details
-		error: {
-			message: '',
-			number: 0
+		config: {
+			calls: 0,
+			default: 'index.html',
+			error: null,
+			headers: {},
+			log: null,
+			method: null,
+			request: null,
+			response: null
 		},
-		// files for processing
-		files: [],
+		content: {
+			error: {
+				head: '<!doctype html><html><head><meta charset="utf-8"></head><body>',
+				tail: '</body></html>'
+			}
+		},
+		mime: {
+			'css': 'text/css',
+			'html': 'text/html',
+			'js': 'application/javascript',
+			'jpg': 'image/jpeg',
+			'gif': 'image/gif',
+			'png': 'image/png'
+		},
+		request: {
+			method: null,
+			ID: null,
+			IDLength: 12,
+			path: null,
+			timestamp: null,
+			url: null
+		},
 		// output options:
 		//// output to connection?
 		//// output content array, additional client headers, 
@@ -198,7 +179,7 @@ module.exports = exports = nfect = (function() {
 		};
 		var _file = function( status, summary ) {
 			// @todo fix
-			_app.nfect.resources.fs.writeFile(_app.config.log, status+': '+summary, function(err) {
+			$nfect.config.resources.fs.writeFile($nfect.config.log, status+': '+summary, function(err) {
 				return (err) ? _err(err), false : true;
 			});
 		};
@@ -208,6 +189,7 @@ module.exports = exports = nfect = (function() {
 		return {
 			dbg: _dbg,
 			err: _err,
+			file: _file,
 			log: _log
 		};
 	})();
@@ -279,60 +261,60 @@ module.exports = exports = nfect = (function() {
 		out: function( descriptor ) {
 			//@fix update for new descriptor rules
 			//@todo return output instead of writing output to connection
-			if(_nfect.output.display === true) {
-				var output = _nfect.output.content.join('');
+			if($nfect.output.display === true) {
+				var output = $nfect.output.content.join('');
 				// add content-length to our headers
-				_nfect.output.headers['Content-Length'] = output.length;
-				_nfect.conn.writeHead(_nfect.output.status, _nfect.output.headers);
-				_nfect.conn.write(output);
-				_nfect.conn.end();
+				$nfect.output.headers['Content-Length'] = output.length;
+				$nfect.conn.writeHead($nfect.output.status, $nfect.output.headers);
+				$nfect.conn.write(output);
+				$nfect.conn.end();
 			}
 			_pubsub.pub('/nfect/callback');
 			//
 			// from new function below
 			//
 			_console.log('_out()');
-			if(_app.config.log && _app.config.log !== null) {
+			if($nfect.config.log && $nfect.config.log !== null) {
 				_log(0, '_out()');
 			}
 			// TODO FIX -- output stuff
 			// method not yet implemented
-			_app.config.response.writeHead(status, summary, {'Content-Type': 'text/html'});
-			_app.config.response.write(_app.data.errorHead+status+' '+summary+_app.data.errorTail);
-			_app.config.response.end();
+			$nfect.config.response.writeHead(status, summary, {'Content-Type': 'text/html'});
+			$nfect.config.response.write($nfect.content.error.head+status+' '+summary+$nfect.content.error.tail);
+			$nfect.config.response.end();
 		}
 	};
 	
-	// initialize the _nfect object
+	// initialize the $nfect object
 	function _init() {
-		var argsLength = _nfect.args.length,
+		var argsLength = $nfect.args.length,
 			descriptor = {},
 			callback = {},
 			connection = {};
 		//parse arguments and behave accordingly
 		switch(argsLength) {
 			case 1:
-				descriptor = _nfect.args[0];
+				descriptor = $nfect.args[0];
 				break;
 			case 2:
-				descriptor = _nfect.args[0];
-				if(typeof(_nfect.args[1]) === 'function') {
-					callback = _nfect.args[1];
-				} else if(typeof(_nfect.args[1]) === 'object') {
-					connection = _nfect.args[1];
+				descriptor = $nfect.args[0];
+				if(typeof($nfect.args[1]) === 'function') {
+					callback = $nfect.args[1];
+				} else if(typeof($nfect.args[1]) === 'object') {
+					connection = $nfect.args[1];
 				} else {
 					_pubsub.pub('/nfect/error',[2,'Syntax Error: Malformed Descriptor: Argument Type']);
 					return false;
 				}
 				break;
 			case 3:
-				descriptor = _nfect.args[0];
-				if(typeof(_nfect.args[1]) === 'object' && typeof(_nfect.args[2]) === 'function') {
-					connection = _nfect.args[1];
-					callback = _nfect.args[2];
-				} else if(typeof(_nfect.args[1]) === 'function' && typeof(_nfect.args[1]) === 'object') {
-					callback = _nfect.args[1];
-					connection = _nfect.args[2];
+				descriptor = $nfect.args[0];
+				if(typeof($nfect.args[1]) === 'object' && typeof($nfect.args[2]) === 'function') {
+					connection = $nfect.args[1];
+					callback = $nfect.args[2];
+				} else if(typeof($nfect.args[1]) === 'function' && typeof($nfect.args[1]) === 'object') {
+					callback = $nfect.args[1];
+					connection = $nfect.args[2];
 				} else {
 					_pubsub.pub('/nfect/error',[3,'Syntax Error: Malformed Descriptor: Argument Type']);
 					return false;
@@ -349,48 +331,46 @@ module.exports = exports = nfect = (function() {
 		var type = Object.prototype.toString.call(descriptor);
 		switch(type) {
 			case '[object Array]':
-				_nfect.type = 'array';
-				_nfect.files = descriptor;
+				$nfect.type = 'array';
+				$nfect.files = descriptor;
 				break;
 			case '[object Object]':
-				_nfect.type = 'object';
-				_nfect.descriptor = descriptor;
-				_nfect.output.parse = true;
+				$nfect.type = 'object';
+				$nfect.descriptor = descriptor;
+				$nfect.output.parse = true;
 				break;
 			case '[object String]':
-				_nfect.type = 'string';
-				_nfect.files.push(descriptor);
+				$nfect.type = 'string';
+				$nfect.files.push(descriptor);
 				break;
 			default:
 				_pubsub.pub('/nfect/error',[6,'Syntax Error: Malformed Descriptor: Improper Type']);
 				return false;
 		}
 		if(callback && typeof(callback) == 'function') {
-			_nfect.callback = callback;
+			$nfect.callback = callback;
 		}
 		// sanity check connection object (_maxListeners *should* be positive int or zero)
 		if(connection && typeof(connection) == 'object' && connection._maxListeners >= 0) {
-			_nfect.conn = connection;
-			_nfect.output.display = true;
+			$nfect.conn = connection;
+			$nfect.output.display = true;
 		}
 		// trigger initialized event handler
 		_pubsub.pub('/nfect/initialized');
 	};
 	
 	function _parse() {
-//debug1
-console.log('[NFECT]:['+_nfect.files[0]+']___________-------->>>>>>> parsing!');
 		var plain = true,
 			process = false;
-		if(_nfect.output.parse) {
-			if(!$func.isEmpty(_nfect.descriptor) && _nfect.descriptor.files && _nfect.descriptor.files.length > 0) {
+		if($nfect.output.parse) {
+			if(!$func.isEmpty($nfect.descriptor) && $nfect.descriptor.files && $nfect.descriptor.files.length > 0) {
 				// copy descriptor files array to nfect storage array
-				_nfect.files = _nfect.descriptor.files;
+				$nfect.files = $nfect.descriptor.files;
 			} else {
 				_pubsub.pub('/nfect/error',[7,'Syntax Error: Descriptor Empty']);
 				return false;
 			}
-			if(_nfect.descriptor.process === true) {
+			if($nfect.descriptor.process === true) {
 				// override process setting
 				//fix -- is this is frickin rong, dude?
 				process = true;
@@ -398,32 +378,32 @@ console.log('[NFECT]:['+_nfect.files[0]+']___________-------->>>>>>> parsing!');
 				process = false;
 			}
 			// data for input files
-			if(!$func.isEmpty(_nfect.descriptor.data) && _nfect.descriptor.data) {
-				_nfect.data = _nfect.descriptor.data;
+			if(!$func.isEmpty($nfect.descriptor.data) && $nfect.descriptor.data) {
+				$nfect.data = $nfect.descriptor.data;
 			}
 			// additional headers
-			if(!$func.isEmpty(_nfect.descriptor.headers) && _nfect.descriptor.headers) {
-				for(var header in _nfect.descriptor.headers) {
-					_nfect.output.headers[header] = _nfect.descriptor.headers[header];
+			if(!$func.isEmpty($nfect.descriptor.headers) && $nfect.descriptor.headers) {
+				for(var header in $nfect.descriptor.headers) {
+					$nfect.output.headers[header] = $nfect.descriptor.headers[header];
 				}
 			}
 			// output type
-			if(_nfect.descriptor.output === 'html') {
+			if($nfect.descriptor.output === 'html') {
 				plain = false;
-			} else if(_nfect.descriptor.output === 'plain') {
+			} else if($nfect.descriptor.output === 'plain') {
 				plain = true;
 			}
 		}
-		var filesLength = _nfect.files.length,
+		var filesLength = $nfect.files.length,
 			regex = /\.html/i;
 		for(var i=0; i<filesLength; i++) {
 			// find file process specifiers or override process setting
-			var file = _nfect.files[i];
+			var file = $nfect.files[i];
 			if(typeof(file) === '[object Object]') {
 				process = true;
 				for(var piece in file) {
 					if(typeof(piece) === '[object String]') {
-						_nfect.files[i] = piece;
+						$nfect.files[i] = piece;
 					} else {
 						_pubsub.pub('/nfect/error',[7,'Syntax Error: Malformed Descriptor: Files Array']);
 						return false;
@@ -431,9 +411,9 @@ console.log('[NFECT]:['+_nfect.files[0]+']___________-------->>>>>>> parsing!');
 				}
 			}
 			if(process === true) {
-				_nfect.output.process[i] = true;
+				$nfect.output.process[i] = true;
 			} else {
-				_nfect.output.process[i] = false;
+				$nfect.output.process[i] = false;
 			}
 			// content detection
 			if(file.match(regex)) {
@@ -442,36 +422,21 @@ console.log('[NFECT]:['+_nfect.files[0]+']___________-------->>>>>>> parsing!');
 		}
 		// output type
 		if(plain === false) {
-			_nfect.output.type = 'html';
+			$nfect.output.type = 'html';
 		} else {
-			_nfect.output.type = 'plain';
+			$nfect.output.type = 'plain';
 		}
 		_pubsub.pub('/nfect/parsed');
 	};
 	
 	function _process() {
-//debug1
-console.log('[NFECT]:['+_nfect.files[0]+'] ___________-------->>>>>>> processing!');
-/*
- * 
- * 
- * trouble afoot at the circle-k:
- * for some reason node.js is hiccuping here on output of (i think)
- * test2.js... it comes down to event loop semantics, i believe, 
- * because some test runs of the file pile run just fine, but most
- * don't. test, test2, test3 runs fine when everything runs in order, 
- * but otherwise nope. hangs
- * 
- * 
- * 
- */
-		var contentLength = _nfect.output.content.length;
-		if(_nfect.output.type === 'html') {
-			_nfect.output.headers['Content-Type'] = 'text/html';
+		var contentLength = $nfect.output.content.length;
+		if($nfect.output.type === 'html') {
+			$nfect.output.headers['Content-Type'] = 'text/html';
 		} else {
-			_nfect.output.headers['Content-Type'] = 'text/plain';
+			$nfect.output.headers['Content-Type'] = 'text/plain';
 		}
-		//fix -- add test for _nfect.state.process === true ? process : noprocess;
+		//fix -- add test for $nfect.state.process === true ? process : noprocess;
 		if(true) {
 		} else {
 			_pubsub.pub('/nfect/error',[8,'Syntax Error: Descriptor Empty']);
@@ -482,7 +447,7 @@ console.log('[NFECT]:['+_nfect.files[0]+'] ___________-------->>>>>>> processing
 	
 	//todo set up eventemitter for fileRead.complete() to trigger out()
 	function _readFiles() {
-		var filesLength = _nfect.files.length,
+		var filesLength = $nfect.files.length,
 			filesRead = 0,
 			fs = require('fs');
 		var contentStorage = [];
@@ -492,7 +457,7 @@ console.log('[NFECT]:['+_nfect.files[0]+'] ___________-------->>>>>>> processing
 			// preserve input file order
 			if(filesRead === filesLength) {
 				for(var i=0; i<filesLength; i++) {
-					_nfect.output.content.push(contentStorage[i]);
+					$nfect.output.content.push(contentStorage[i]);
 				}
 				_pubsub.pub('/nfect/files/read');
 				return;
@@ -501,7 +466,7 @@ console.log('[NFECT]:['+_nfect.files[0]+'] ___________-------->>>>>>> processing
 		for(var i=0; i<filesLength; i++) {
 			// pass iterator into closure
 			(function(iteration) {
-				var nextFile = _nfect.files[iteration];
+				var nextFile = $nfect.files[iteration];
 				fs.readFile(nextFile, 'utf8', function(err, contents) {
 					if(err) {
 						_pubsub.pub('/nfect/error',[1,'File Read Error: ['+err+']']);
@@ -516,23 +481,23 @@ console.log('[NFECT]:['+_nfect.files[0]+'] ___________-------->>>>>>> processing
 	
 	function nfect() {
 		// zeroize data objects
-		_nfect = { };
+		$nfect = { };
 		_pubsub.flush();
 		// initiate triggers
 		var errorHandle = _pubsub.sub('/nfect/error', function(num, msg) {
-			_nfect.type = 'error';
-			_nfect.error.number = num;
-			_nfect.error.message = msg;
-			if(_nfect.conn && typeof(_nfect.conn) === 'object' && !$func.isEmpty(_nfect.conn)) {
-				_nfect.conn.writeHead(500, { 'Content-Type': 'text/plain' });
-				_nfect.conn.write('NFECT Error '+_nfect.error.number+': '+_nfect.error.message);
-				_nfect.conn.end();
+			$nfect.type = 'error';
+			$nfect.error.number = num;
+			$nfect.error.message = msg;
+			if($nfect.conn && typeof($nfect.conn) === 'object' && !$func.isEmpty($nfect.conn)) {
+				$nfect.conn.writeHead(500, { 'Content-Type': 'text/plain' });
+				$nfect.conn.write('NFECT Error '+$nfect.error.number+': '+$nfect.error.message);
+				$nfect.conn.end();
 			} else {
-				console.log('NFECT Error '+_nfect.error.number+': ['+_nfect.error.message+']');
+				console.log('NFECT Error '+$nfect.error.number+': ['+$nfect.error.message+']');
 			}
 			// initiate callback with error
-			if(_nfect.callback && typeof(_nfect.callback) === 'function') {
-				_nfect.callback.apply(this, ['Error '+_nfect.error.number+': ['+_nfect.error.message+']', null]);
+			if($nfect.callback && typeof($nfect.callback) === 'function') {
+				$nfect.callback.apply(this, ['Error '+$nfect.error.number+': ['+$nfect.error.message+']', null]);
 			} else {
 				return false;
 			}
@@ -544,9 +509,9 @@ console.log('[NFECT]:['+_nfect.files[0]+'] ___________-------->>>>>>> processing
 		var processHandle = _pubsub.sub('/nfect/files/processed', _out);
 		var callbackHandle = _pubsub.sub('/nfect/callback', function() {
 			// initiate callback
-			if(_nfect.callback && typeof(_nfect.callback) === 'function') {
+			if($nfect.callback && typeof($nfect.callback) === 'function') {
 				console.log('[NFECT] Initiating callback with output');
-				_nfect.callback.apply(this, [null, _nfect.output.content.join('')]);
+				$nfect.callback.apply(this, [null, $nfect.output.content.join('')]);
 			}
 		});
 		// formalize arguments array
@@ -582,7 +547,7 @@ console.log('[NFECT]:['+_nfect.files[0]+'] ___________-------->>>>>>> processing
 			err: _error,
 			log: _log
 		};
-	})(_app.nfect.loglevel);
+	})($nfect.config.loglevel);
 
 //debug start
 	/*
@@ -615,41 +580,19 @@ console.log('[NFECT]:['+_nfect.files[0]+'] ___________-------->>>>>>> processing
 
 	var _add = function(descriptor) {
 		_console.log('.add()');
-//debug1
-console.log('_app.calls:['+_app.config.calls+']descriptor['+descriptor+']');
-		if(++_app.config.calls == 1) {
-//debug1
-console.log('first .add() call!');
+		if(++$nfect.config.calls == 1) {
 			if(descriptor.file && descriptor.file !== null) {
-//debug1
-console.log('_app.config.defalt:['+_app.config.default+']');
 				// yes, it's cool (http://es5.github.io/#x7.6)
-				_app.config.default = descriptor.file;
+				$nfect.config.default = descriptor.file;
 			} else {
-//debug1
-console.log('_app.config.default:['+_app.config.default+']');
-				descriptor.file = _app.config.default;
+				descriptor.file = $nfect.config.default;
 			}
 			if(descriptor.method && descriptor.method !== null) {
-//debug1
-console.log('descriptor.method:['+descriptor.method+']');
 			} else {
-//debug1
-console.log('descriptor.method:['+descriptor.method+']');
 			}
 		}
 		if(descriptor.file && descriptor.file !== null) {
-//debug1
-console.log('pushing new __File()!');
-//debug start
-console.log('DESCRIPTOR:');
-for(var prop in descriptor) {
-	if(descriptor.hasOwnProperty(prop)) {
-		console.log('property=>['+prop+']');
-	}
-}
-//debug end
-			_app.cache.push(new __File(descriptor));
+			$app.cache.push(new __File(descriptor));
 			return this;
 		} else if(descriptor.files && descriptor.files !== null) {
 			var files = descriptor.files.slice();
@@ -674,151 +617,91 @@ for(var prop in descriptor) {
 		return this;
 	};
 
-/*
-config: {
-	calls: 0,
-	default: 'index.html',
-	error: null,
-	header: null,
-	log: null,
-	method: null,
-	request: null,
-	response: null
-}
-*/
-
 	var _config = function(descriptor) {
 		_console.log('.config()');
 		if(descriptor.default && descriptor.default !== null) {
-			_app.config.default = descriptor.default;
+			$nfect.config.default = descriptor.default;
 		}
 		if(descriptor.error && descriptor.error !== null) {
-			_app.config.error = descriptor.error;
+			$nfect.config.error = descriptor.error;
 		}
 		if(descriptor.header && descriptor.header !== null) {
-			_app.config.header = descriptor.header;
+			$nfect.config.header = descriptor.header;
 		} else {
-			_app.config.header = {};
+			$nfect.config.header = {};
 		}
 		if(descriptor.log && descriptor.log !== null) {
-			_app.config.log = descriptor.log;
+			$nfect.config.log = descriptor.log;
 		}
 		if(descriptor.method && descriptor.method !== null) {
-			_app.config.method = descriptor.method;
+			$nfect.config.method = descriptor.method;
 		} else {
-			_app.config.method = 'GET';
+			$nfect.config.method = 'GET';
 		}
 		if(descriptor.request && descriptor.request !== null) {
-			_app.config.request = descriptor.request;
+			$nfect.config.request = descriptor.request;
 		}
 		if(descriptor.response && descriptor.response !== null) {
-			_app.config.response = descriptor.response;
+			$nfect.config.response = descriptor.response;
 		}
 		return this;
 	};
 
 	var _go = function() {
-		if(_app.cache.length == 0) {
+		if($app.cache.length == 0) {
 			_add({ method: 'GET' });
 		}
 		// default configuration
-		_app.nfect.request.ID = _generateRID(_app.nfect.request.IDLength);
+		$nfect.config.request.ID = _generateRID($nfect.config.request.IDLength);
 		// make sure we're the last function on the event queue
 		setTimeout(_init(),0);
 	};
-
-//debug start
-/*
-		config: {
-			calls: 0,
-			default: 'index.html',
-			error: null,
-			header: null,
-			log: null,
-			method: null,
-			request: null,
-			response: null
-		}
- */
-//debug end
 
 	var _init = function() {
 		_console.log('_init()');
 		// TODO FIX -- do some shit here!
 		// general general configuration mismatch errors
-		if(typeof(_app.config.method) !== 'undefined') {
-			if(_app.config.request.method !== _app.config.method) {
+		if(typeof($nfect.config.method) !== 'undefined') {
+			if($nfect.config.request.method !== $nfect.config.method) {
 				_error(413, "Method Not Supported");
 				return false;
 			}
 		}
-//debug1
-console.log('_init():10');
 //
 //
 // THIS IS NEXT DUDE
-// basically search through all _app.cache __File() objects and see if 
+// basically search through all $app.cache __File() objects and see if 
 // any of the .file matches the inbound request.url. IF NONE MATCH, then 
 // you MUST fallback onto the default, whatever that is set to
 //
-//
-//		var current = {};
-//		for(var i=0; i>_app.cache.length; i++) {
-//			if(_app.cache[i].file == _app.config.request.url) {
-//				current = _app.cache[i];
-//			}
-//		}
-//debug1
-console.log('_app.cache:['+_app.cache+']_app.cache.len:['+_app.cache.length+']');
-		_app.cache.forEach(function(file, index, cache) {
-//debug start
-console.log('CACHE OBJECT:');
-for(var prop in file) {
-	if(file.hasOwnProperty(prop)) {
-		console.log('property=>['+prop+']');
-	}
-}
-//debug end
-//debug1
-console.log('_init():15');
 			// attempt to route
-			if((_app.config.request.url !== file.file) && (index+1 < _app.cache.length)) {
-//debug1
-console.log('_init():20');
-//debug1
-console.log('_app.config.request.url:['+_app.config.request.url+']file.file:['+file.file+']');
+			if(($nfect.config.request.url !== file.file) && (index+1 < $app.cache.length)) {
 				return false;
 			} else {
-//debug1
-console.log('_init():25');
 				// test for default-ness
-				if(index == _app.cache.length) {
+				if(index == $app.cache.length) {
 					var defaultFile = true;
 				} else {
 					var defaultFile = false;
 				}
-				_app.nfect.request.path = _app.nfect.resources.url.parse(_app.config.request.url).pathname;
-				var fileType = _app.nfect.request.path.substr(_app.nfect.request.path.lastIndexOf('.')+1);
-				var mimeType = _app.nfect.mime[fileType];
+				$nfect.config.request.path = $nfect.config.resources.url.parse($nfect.config.request.url).pathname;
+				var fileType = $nfect.config.request.path.substr($nfect.config.request.path.lastIndexOf('.')+1);
+				var mimeType = $nfect.config.mime[fileType];
 				if(mimeType && mimeType !== null) {
-					_app.config.header['Content-Type'] = mimeType;
+					$nfect.config.header['Content-Type'] = mimeType;
 				} else {
-					_app.config.header['Content-Type'] = 'text/plain';
+					$nfect.config.header['Content-Type'] = 'text/plain';
 				}
-//debug1
-console.log('_init():30');
 				if(file.method && file.method !== null) {
-					if(_app.config.request.method !== file.method) {
+					if($nfect.config.request.method !== file.method) {
 						_error(413, "Method Not Supported");
 						return false;
 					}
 				}
-//debug1
-console.log('_init():40');
-				if(_app.config.header && _app.config.header !== null) {
-					for(header in _app.config.header) {
-						if(_app.config.header.hasOwnProperty(header)) {
-							file.header[header] = _app.config.header[header];
+				if($nfect.config.header && $nfect.config.header !== null) {
+					for(header in $nfect.config.header) {
+						if($nfect.config.header.hasOwnProperty(header)) {
+							file.header[header] = $nfect.config.header[header];
 						}
 					}
 				}
