@@ -522,29 +522,22 @@ module.exports = exports = nfect = (function() {
 
 	var _config = function(descriptor) {
 		_console.log('.config()');
-		if(descriptor.default && descriptor.default !== null) {
+		if(typeof(descriptor.default) !== 'undefined') {
 			$nfect.config.default = descriptor.default;
 		}
-		if(descriptor.error && descriptor.error !== null) {
+		if(typeof(descriptor.error) !== 'undefined') {
 			$nfect.config.error = descriptor.error;
 		}
-		if(descriptor.header && descriptor.header !== null) {
-			$nfect.config.header = descriptor.header;
-		} else {
-			$nfect.config.header = {};
-		}
-		if(descriptor.log && descriptor.log !== null) {
+		$nfect.config.header = (typeof(descriptor.header) !== 'undefined') ? descriptor.header : {};
+		if(typeof(descriptor.log) !== 'undefined') {
 			$nfect.config.log = descriptor.log;
 		}
-		if(descriptor.method && descriptor.method !== null) {
-			$nfect.config.method = descriptor.method;
-		} else {
-			$nfect.config.method = 'GET';
+		$nfect.config.method = (typeof(descriptor.method) !== 'undefined') ? descriptor.method : 'GET';
 		}
-		if(descriptor.request && descriptor.request !== null) {
+		if(typeof(descriptor.request) !== 'undefined') {
 			$nfect.config.request = descriptor.request;
 		}
-		if(descriptor.response && descriptor.response !== null) {
+		if(typeof(descriptor.response) !== 'undefined') {
 			$nfect.config.response = descriptor.response;
 		}
 		return this;
@@ -638,7 +631,7 @@ module.exports = exports = nfect = (function() {
 
 	(var _init = function() {
 		_console.log('_init()');
-		// TODO FIX -- do some shit here!
+		// @todo do some shit here!
 		// general general configuration mismatch errors
 		if(typeof($nfect.config.method) !== 'undefined') {
 			if($nfect.config.request.method !== $nfect.config.method) {
