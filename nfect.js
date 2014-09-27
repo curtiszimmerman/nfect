@@ -93,7 +93,7 @@ module.exports = exports = nfect = (function() {
 	 */
 	var _done = (function() {
 		var cache = {};
-		function _after( num, callback ) {
+		functdion _after( num, callback ) {
 			for (var i=0,id='';i<10;i++,id+=Math.floor(Math.random()*10));
 			return (!cache[id]) ? (cache[id] = {id:id,count:num,callback:callback}, id) : _after(num,callback);
 		};
@@ -204,13 +204,14 @@ module.exports = exports = nfect = (function() {
 		};
 	}());
 	
-	// generate random client ID
-	function _genID() {
-		// there's no reason you shouldn't just use a class-like variable
-		// to iterate and then store newly-created nfect objects in the 
-		// client array indexed to that iterated variable, like:
-		// for(i=0;i<20;i++) { nfect_client++; clients[nfect_client] = foo; }
-	};
+	getID: function( length ) {
+		for (
+			var i=0, id='', length=(typeof(length) === 'number') ? length : 8, chr='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+			i<length;
+			i++, id+=chr.substr(Math.floor(Math.random()*chr.length),1)
+		);
+		return id;
+	}
 	
 	// initialize the _nfect object
 	function _init() {
