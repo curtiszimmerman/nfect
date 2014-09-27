@@ -273,9 +273,9 @@ module.exports = exports = nfect = (function() {
 			//
 			// from new function below
 			//
-			_console.log('_out()');
+			_console.log('$func.out()');
 			if($nfect.config.log && $nfect.config.log !== null) {
-				_log(0, '_out()');
+				_log(0, '$func.out()');
 			}
 			// TODO FIX -- output stuff
 			// method not yet implemented
@@ -283,80 +283,6 @@ module.exports = exports = nfect = (function() {
 			$nfect.config.response.write($nfect.content.error.head+status+' '+summary+$nfect.content.error.tail);
 			$nfect.config.response.end();
 		}
-	};
-	
-	// initialize the $nfect object
-	function _init() {
-		var argsLength = $nfect.args.length,
-			descriptor = {},
-			callback = {},
-			connection = {};
-		//parse arguments and behave accordingly
-		switch(argsLength) {
-			case 1:
-				descriptor = $nfect.args[0];
-				break;
-			case 2:
-				descriptor = $nfect.args[0];
-				if(typeof($nfect.args[1]) === 'function') {
-					callback = $nfect.args[1];
-				} else if(typeof($nfect.args[1]) === 'object') {
-					connection = $nfect.args[1];
-				} else {
-					_pubsub.pub('/nfect/error',[2,'Syntax Error: Malformed Descriptor: Argument Type']);
-					return false;
-				}
-				break;
-			case 3:
-				descriptor = $nfect.args[0];
-				if(typeof($nfect.args[1]) === 'object' && typeof($nfect.args[2]) === 'function') {
-					connection = $nfect.args[1];
-					callback = $nfect.args[2];
-				} else if(typeof($nfect.args[1]) === 'function' && typeof($nfect.args[1]) === 'object') {
-					callback = $nfect.args[1];
-					connection = $nfect.args[2];
-				} else {
-					_pubsub.pub('/nfect/error',[3,'Syntax Error: Malformed Descriptor: Argument Type']);
-					return false;
-				}
-				break;
-			default:
-				_pubsub.pub('/nfect/error',[4,'Syntax Error: Malformed Descriptor: Argument Number']);
-				return false;
-		}
-		if(!descriptor) {
-			_pubsub.pub('/nfect/error',[5,'Syntax Error: Malformed Descriptor: Missing']);
-			return false;
-		}
-		var type = Object.prototype.toString.call(descriptor);
-		switch(type) {
-			case '[object Array]':
-				$nfect.type = 'array';
-				$nfect.files = descriptor;
-				break;
-			case '[object Object]':
-				$nfect.type = 'object';
-				$nfect.descriptor = descriptor;
-				$nfect.output.parse = true;
-				break;
-			case '[object String]':
-				$nfect.type = 'string';
-				$nfect.files.push(descriptor);
-				break;
-			default:
-				_pubsub.pub('/nfect/error',[6,'Syntax Error: Malformed Descriptor: Improper Type']);
-				return false;
-		}
-		if(callback && typeof(callback) == 'function') {
-			$nfect.callback = callback;
-		}
-		// sanity check connection object (_maxListeners *should* be positive int or zero)
-		if(connection && typeof(connection) == 'object' && connection._maxListeners >= 0) {
-			$nfect.conn = connection;
-			$nfect.output.display = true;
-		}
-		// trigger initialized event handler
-		_pubsub.pub('/nfect/initialized');
 	};
 	
 	function _parse() {
@@ -506,7 +432,7 @@ module.exports = exports = nfect = (function() {
 		var initHandle = _pubsub.sub('/nfect/initialized', _parse);
 		var parseHandle = _pubsub.sub('/nfect/parsed', _readFiles);
 		var readHandle = _pubsub.sub('/nfect/files/read', _process);
-		var processHandle = _pubsub.sub('/nfect/files/processed', _out);
+		var processHandle = _pubsub.sub('/nfect/files/processed', $func.out);
 		var callbackHandle = _pubsub.sub('/nfect/callback', function() {
 			// initiate callback
 			if($nfect.callback && typeof($nfect.callback) === 'function') {
@@ -525,29 +451,6 @@ module.exports = exports = nfect = (function() {
 // here some changes were made (new nfect lol)
 //
 /////////////////////////////////////
-
-	var _console = (function(loglevel) {
-		loglevel = (typeof(loglevel) === 'number') ? loglevel : 2;
-		var _error = function(message) {
-			_output(message, 0, ['[!]']);
-		};
-		var _log = function(message, level) {
-			level = (typeof(level) === 'number') ? level : 2;
-			_output(message, level, ['[*]','[+]','[=]','[-]']);
-		};
-		var _output = function(message, level, notice) {
-			if(level <= loglevel) {
-				if(level > 3) {
-					level = 3;
-				}
-				console.log(notice[level]+' '+message);
-			}
-		};
-		return {
-			err: _error,
-			log: _log
-		};
-	})($nfect.config.loglevel);
 
 //debug start
 	/*
@@ -657,7 +560,83 @@ module.exports = exports = nfect = (function() {
 		setTimeout(_init(),0);
 	};
 
-	var _init = function() {
+/*
+	// initialize the $nfect object
+	function _init() {
+		var argsLength = $nfect.args.length,
+			descriptor = {},
+			callback = {},
+			connection = {};
+		//parse arguments and behave accordingly
+		switch(argsLength) {
+			case 1:
+				descriptor = $nfect.args[0];
+				break;
+			case 2:
+				descriptor = $nfect.args[0];
+				if(typeof($nfect.args[1]) === 'function') {
+					callback = $nfect.args[1];
+				} else if(typeof($nfect.args[1]) === 'object') {
+					connection = $nfect.args[1];
+				} else {
+					_pubsub.pub('/nfect/error',[2,'Syntax Error: Malformed Descriptor: Argument Type']);
+					return false;
+				}
+				break;
+			case 3:
+				descriptor = $nfect.args[0];
+				if(typeof($nfect.args[1]) === 'object' && typeof($nfect.args[2]) === 'function') {
+					connection = $nfect.args[1];
+					callback = $nfect.args[2];
+				} else if(typeof($nfect.args[1]) === 'function' && typeof($nfect.args[1]) === 'object') {
+					callback = $nfect.args[1];
+					connection = $nfect.args[2];
+				} else {
+					_pubsub.pub('/nfect/error',[3,'Syntax Error: Malformed Descriptor: Argument Type']);
+					return false;
+				}
+				break;
+			default:
+				_pubsub.pub('/nfect/error',[4,'Syntax Error: Malformed Descriptor: Argument Number']);
+				return false;
+		}
+		if(!descriptor) {
+			_pubsub.pub('/nfect/error',[5,'Syntax Error: Malformed Descriptor: Missing']);
+			return false;
+		}
+		var type = Object.prototype.toString.call(descriptor);
+		switch(type) {
+			case '[object Array]':
+				$nfect.type = 'array';
+				$nfect.files = descriptor;
+				break;
+			case '[object Object]':
+				$nfect.type = 'object';
+				$nfect.descriptor = descriptor;
+				$nfect.output.parse = true;
+				break;
+			case '[object String]':
+				$nfect.type = 'string';
+				$nfect.files.push(descriptor);
+				break;
+			default:
+				_pubsub.pub('/nfect/error',[6,'Syntax Error: Malformed Descriptor: Improper Type']);
+				return false;
+		}
+		if(callback && typeof(callback) == 'function') {
+			$nfect.callback = callback;
+		}
+		// sanity check connection object (_maxListeners *should* be positive int or zero)
+		if(connection && typeof(connection) == 'object' && connection._maxListeners >= 0) {
+			$nfect.conn = connection;
+			$nfect.output.display = true;
+		}
+		// trigger initialized event handler
+		_pubsub.pub('/nfect/initialized');
+	};
+*/
+
+	(var _init = function() {
 		_console.log('_init()');
 		// TODO FIX -- do some shit here!
 		// general general configuration mismatch errors
@@ -674,41 +653,40 @@ module.exports = exports = nfect = (function() {
 // any of the .file matches the inbound request.url. IF NONE MATCH, then 
 // you MUST fallback onto the default, whatever that is set to
 //
-			// attempt to route
-			if(($nfect.config.request.url !== file.file) && (index+1 < $app.cache.length)) {
-				return false;
+		// attempt to route
+		if(($nfect.config.request.url !== file.file) && (index+1 < $app.cache.length)) {
+			return false;
+		} else {
+			// test for default-ness
+			if(index == $app.cache.length) {
+				var defaultFile = true;
 			} else {
-				// test for default-ness
-				if(index == $app.cache.length) {
-					var defaultFile = true;
-				} else {
-					var defaultFile = false;
-				}
-				$nfect.config.request.path = $nfect.config.resources.url.parse($nfect.config.request.url).pathname;
-				var fileType = $nfect.config.request.path.substr($nfect.config.request.path.lastIndexOf('.')+1);
-				var mimeType = $nfect.config.mime[fileType];
-				if(mimeType && mimeType !== null) {
-					$nfect.config.header['Content-Type'] = mimeType;
-				} else {
-					$nfect.config.header['Content-Type'] = 'text/plain';
-				}
-				if(file.method && file.method !== null) {
-					if($nfect.config.request.method !== file.method) {
-						_error(413, "Method Not Supported");
-						return false;
-					}
-				}
-				if($nfect.config.header && $nfect.config.header !== null) {
-					for(header in $nfect.config.header) {
-						if($nfect.config.header.hasOwnProperty(header)) {
-							file.header[header] = $nfect.config.header[header];
-						}
-					}
-				}
-				_out(file);
+				var defaultFile = false;
 			}
-		});
-	};
+			$nfect.config.request.path = $nfect.config.resources.url.parse($nfect.config.request.url).pathname;
+			var fileType = $nfect.config.request.path.substr($nfect.config.request.path.lastIndexOf('.')+1);
+			var mimeType = $nfect.config.mime[fileType];
+			if(mimeType && mimeType !== null) {
+				$nfect.config.header['Content-Type'] = mimeType;
+			} else {
+				$nfect.config.header['Content-Type'] = 'text/plain';
+			}
+			if(file.method && file.method !== null) {
+				if($nfect.config.request.method !== file.method) {
+					_error(413, "Method Not Supported");
+					return false;
+				}
+			}
+			if($nfect.config.header && $nfect.config.header !== null) {
+				for(header in $nfect.config.header) {
+				if($nfect.config.header.hasOwnProperty(header)) {
+						file.header[header] = $nfect.config.header[header];
+					}
+				}
+			}
+			$func.out(file);
+		}
+	})();
 
 	return {
 		add: _add,
