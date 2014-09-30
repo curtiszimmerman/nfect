@@ -385,79 +385,80 @@ module.exports = exports = nfect = (function() {
 	};
 
 	var _NFECT = function( descriptor ) {
-
+		this.descriptor = descriptor;
+		this.files = [];
 	};
 
-	_NFECT.prototype = {
-		constructor: _NFECT,
-		add: function( descriptor ) {
-			_log.log('.add()');
-			if(++$nfect.config.calls == 1) {
-				if(descriptor.file && descriptor.file !== null) {
-					// yes, it's cool (http://es5.github.io/#x7.6)
-					$nfect.config.default = descriptor.file;
-				} else {
-					descriptor.file = $nfect.config.default;
-				}
-				if(descriptor.method && descriptor.method !== null) {
-				} else {
-				}
-			}
+	_NFECT.prototype.add = function( descriptor ) {
+		_log.log('.add()');
+		if(++$nfect.config.calls == 1) {
 			if(descriptor.file && descriptor.file !== null) {
-				$app.cache.push(new __File(descriptor));
-				return this;
-			} else if(descriptor.files && descriptor.files !== null) {
-				var files = descriptor.files.slice();
-				delete descriptor.files;
-				files.forEach(function(file) {
-					// shallow object copy
-					var descriptorNew = {};
-					for(var key in descriptor) {
-						if(descriptor.hasOwnProperty(key)) {
-							descriptorNew[key] = descriptor[key];
-						}
-					}
-					descriptorNew.file = file;
-					_add(descriptorNew);
-				});
+				// yes, it's cool (http://es5.github.io/#x7.6)
+				$nfect.config.default = descriptor.file;
+			} else {
+				descriptor.file = $nfect.config.default;
 			}
-		},
-		build: function( descriptor ) {
-			_log.log('.build()');
-			// method not implemented yet
-			return this;
-		},
-		config: function( descriptor ) {
-			_log.log('.config()');
-			if(typeof(descriptor.default) !== 'undefined') {
-				$nfect.config.default = descriptor.default;
+			if(descriptor.method && descriptor.method !== null) {
+			} else {
 			}
-			if(typeof(descriptor.error) !== 'undefined') {
-				$nfect.config.error = descriptor.error;
-			}
-			$nfect.config.header = (typeof(descriptor.header) !== 'undefined') ? descriptor.header : {};
-			if(typeof(descriptor.log) !== 'undefined') {
-				$nfect.config.log = descriptor.log;
-			}
-			$nfect.config.method = (typeof(descriptor.method) !== 'undefined') ? descriptor.method : 'GET';
-			}
-			if(typeof(descriptor.request) !== 'undefined') {
-				$nfect.config.request = descriptor.request;
-			}
-			if(typeof(descriptor.response) !== 'undefined') {
-				$nfect.config.response = descriptor.response;
-			}
-			return this;
-		},
-		go: function() {
-			if($app.cache.length == 0) {
-				_add({ method: 'GET' });
-			}
-			// default configuration
-			$nfect.config.request.ID = _generateRID($nfect.config.request.IDLength);
-			// make sure we're the last function on the event queue
-			setTimeout(_init(),0);
 		}
+		if(descriptor.file && descriptor.file !== null) {
+			$app.cache.push(new __File(descriptor));
+			return this;
+		} else if(descriptor.files && descriptor.files !== null) {
+			var files = descriptor.files.slice();
+			delete descriptor.files;
+			files.forEach(function(file) {
+				// shallow object copy
+				var descriptorNew = {};
+				for(var key in descriptor) {
+					if(descriptor.hasOwnProperty(key)) {
+						descriptorNew[key] = descriptor[key];
+					}
+				}
+				descriptorNew.file = file;
+				_add(descriptorNew);
+			});
+		}
+	};
+
+	_NFECT.prototype.build = function( descriptor ) {
+		_log.log('.build()');
+		// method not implemented yet
+		return this;
+	};
+
+	_NFECT.prototype.config = function( descriptor ) {
+		_log.log('.config()');
+		if(typeof(descriptor.default) !== 'undefined') {
+			$nfect.config.default = descriptor.default;
+		}
+		if(typeof(descriptor.error) !== 'undefined') {
+			$nfect.config.error = descriptor.error;
+		}
+		$nfect.config.header = (typeof(descriptor.header) !== 'undefined') ? descriptor.header : {};
+		if(typeof(descriptor.log) !== 'undefined') {
+			$nfect.config.log = descriptor.log;
+		}
+		$nfect.config.method = (typeof(descriptor.method) !== 'undefined') ? descriptor.method : 'GET';
+		}
+		if(typeof(descriptor.request) !== 'undefined') {
+			$nfect.config.request = descriptor.request;
+		}
+		if(typeof(descriptor.response) !== 'undefined') {
+			$nfect.config.response = descriptor.response;
+		}
+		return this;
+	};
+
+	_NFECT.prototype.go = function() {
+		if($app.cache.length == 0) {
+			_add({ method: 'GET' });
+		}
+		// default configuration
+		$nfect.config.request.ID = _generateRID($nfect.config.request.IDLength);
+		// make sure we're the last function on the event queue
+		setTimeout(_init(),0);
 	};
 
 /*
