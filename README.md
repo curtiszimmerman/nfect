@@ -1,6 +1,6 @@
 NFECT
 ====
-## (Node.js Front-End Construction Tool)
+## (Node.js Front-End Construction Toolkit)
 
 NFECT is a Node.js module for simple file output to the client. It uses 
 JavaScript method chaining to indicate loading, execution, and 
@@ -20,8 +20,8 @@ The following Node.js code initializes a simple HTTP server that responds
 to all requests using NFECT to output an `index.html` file to the client.
 
 ```javascript
+var nfect = require('nfect');
 var server = http.createServer(function(req, res) {
-  var nfect = require('./nfect');
   nfect.config({
     request: req, response: res
   }).go();
@@ -34,8 +34,8 @@ a multiple-page server using several different files. The method also
 specifies a custom `Expires` HTTP header for each of the files.
 
 ```javascript
+var nfect = require('nfect');
 var server = http.createServer(function(req, res) {
-  var nfect = require('../nfect');
   nfect.config({
     request: req, response: res
   }).add({
@@ -53,8 +53,8 @@ independent files into one output file. Compare this functionality to a
 more traditional `include()` function in other languages.
 
 ```javascript
+var nfect = require('nfect');
 var server = http.createServer(function(req, res) {
-  var nfect = require('./nfect');
   nfect.config({
     request: req, response: res
   }).build({
@@ -66,4 +66,4 @@ var server = http.createServer(function(req, res) {
 
 ## License
 
-NFECT is released under the BSD License (version 3).
+NFECT is (C) 2014 curtis zimmerman and released under GPLv3.
