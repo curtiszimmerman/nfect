@@ -34,7 +34,6 @@ a multiple-page server using several different files. The method also
 specifies a custom `Expires` HTTP header for each of the files.
 
 ```javascript
-var nfect = require('nfect');
 var server = http.createServer(function(req, res) {
   nfect.config({
     request: req, response: res
@@ -53,7 +52,6 @@ independent files into one output file. Compare this functionality to a
 more traditional `include()` function in other languages.
 
 ```javascript
-var nfect = require('nfect');
 var server = http.createServer(function(req, res) {
   nfect.config({
     request: req, response: res
