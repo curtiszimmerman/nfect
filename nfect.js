@@ -125,6 +125,9 @@ module.exports = exports = nfect = (function() {
 			timestamp: {},
 			url: {}
 		},
+		response: {
+			headers: []
+		},
 		// output options:
 		//// output to connection?
 		//// output content array, additional client headers, 
@@ -471,13 +474,13 @@ module.exports = exports = nfect = (function() {
 			}
 		},
 		nfect: {
-			add: function() {
-				return false;
+			add: function( file ) {
+				return true;
 			},
 			build: function() {
 				return false;
 			},
-			config: function() {
+			config: function( config ) {
 				return false;
 			},
 			fire: function( event ) {
@@ -486,6 +489,11 @@ module.exports = exports = nfect = (function() {
 			},
 			go: function() {
 				return false;
+			},
+			header: function( header ) {
+				if (typeof(header) !== 'object') return false;
+				$nfect.response.headers.push(header);
+				return true;
 			},
 			on: function( event, handler ) {
 				return _pubsub.sub('/nfect/event/on', function() {

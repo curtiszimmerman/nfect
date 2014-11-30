@@ -40,7 +40,7 @@ var server = http.createServer(function(req, res) {
   }).add({
     files: ['index.html','default.css','site.js'],
     header: {
-      'Expires': 'Wed, 01 Jan 2014 16:00:00 GMT'
+      'Expires': 'Wed, 01 Jan 2015 16:00:00 GMT'
     }
   }).go();
 }).listen(80);

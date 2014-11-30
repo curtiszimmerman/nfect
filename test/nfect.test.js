@@ -14,7 +14,7 @@ module.exports = exports = __test = (function() {
 
 	describe('#NFECT', function() {
 		describe('add', function() {
-			it('should equal true', function() {
+			it('***STUB*** should equal true', function() {
 				expect(true).to.equal(true);
 			});
 		});
@@ -27,12 +27,12 @@ module.exports = exports = __test = (function() {
 			});
 		});
 		describe('build', function() {
-			it('should equal true', function() {
+			it('***STUB*** should equal true', function() {
 				expect(true).to.equal(true);
 			});
 		});
 		describe('config', function() {
-			it('should equal true', function() {
+			it('***STUB*** should equal true', function() {
 				expect(true).to.equal(true);
 			});
 		});
@@ -44,14 +44,17 @@ module.exports = exports = __test = (function() {
 				nfect.fire('/unittest/fire', [true]);
 			});
 		});
-		describe('header', function() {
-			it('should equal true', function() {
+		describe('go', function() {
+			it('***STUB*** should equal true', function() {
 				expect(true).to.equal(true);
 			});
 		});
-		describe('go', function() {
-			it('should equal true', function() {
-				expect(true).to.equal(true);
+		describe('header', function() {
+			it('should return false when given an integer', function() {
+				expect(nfect.header(1)).to.equal(false);
+			});
+			it('should return true when given an object', function() {
+				expect(nfect.header({'X-Test': 'NFECT'})).to.equal(true);
 			});
 		});
 		describe('on', function() {
