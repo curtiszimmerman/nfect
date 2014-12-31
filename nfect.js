@@ -75,10 +75,16 @@ module.exports = exports = nfect = (function() {
 	};
 
 	// internal data object
-	var $app = {
+	var $data = {
 		cache: [],
+		server: {
+			logs: {
+				level: 4,
+				quiet: false
+			}
+		},
 		settings: {
-			loglevel: 2,
+			loglevel: 4,
 			resources: {
 				fs: require('fs'),
 				http: require('http'),
@@ -219,45 +225,48 @@ module.exports = exports = nfect = (function() {
 	
 	/**
 	 * @function _log
-	 * Exposes three logging functions.
-	 * @method dbg
+	 * Exposes logging functions.
+	 * @method debug
 	 * Log a debug message if debugging is on.
 	 * @param (string) data - The data to log.
 	 * @return (boolean) Success indicator.
-	 * @method err
+	 * @method error
 	 * Log an error.
+	 * @param (string) data - The data to log.
+	 * @return (boolean) Success indicator.
+	 * @method info
+	 * Log an informational message.
 	 * @param (string) data - The data to log.
 	 * @return (boolean) Success indicator.
 	 * @method log
 	 * Log a message.
 	 * @param (string) data - The data to log.
+	 * @param (integer) [loglevel] - Loglevel of data. Default 1.
+	 * @return (boolean) Success indicator.
+	 * @method warn
+	 * Log a warning.
+	 * @param (string) data - The data to log.
 	 * @return (boolean) Success indicator.
 	 */
 	var _log = (function() {
-		var _con = function( data, type ) {
-			var pre = ['[i] DEBUG: ', '[!] ERROR: ', '[+] '];
-			return console.log(pre[type]+data);
+		var _con = function( data, loglevel ) {
+			var pre = ['[!] ERROR: ', '[+] ', '[i] WARN: ', '[i] INFO: ', '[i] DEBUG: '];
+			return console.log(pre[loglevel]+data);
 		};
-		var _dbg = function( data ) {
-			if ($data.server.state.debug === true) return _con(data, 0);
+		var _debug = function( data ) { return _con(data, 4);};
+		var _error = function( data ) { return _con(data, 0);};
+		var _info = function( data ) { return _con(data, 3);};
+		var _log = function( data, loglevel ) {
+			var loglevel = typeof(loglevel) === 'undefined' ? 1 : loglevel > 4 ? 4 : loglevel;
+			return $data.server.logs.quiet ? loglevel === 0 && _con(data, 0) : loglevel <= $data.server.logs.level && _con(data, loglevel);
 		};
-		var _err = function( data ) {
-			return _con(data, 1);
-		};
-		var _file = function( status, summary ) {
-			// @todo fix
-			$nfect.config.resources.fs.writeFile($nfect.config.log, status+': '+summary, function(err) {
-				return (err) ? (_err(err), false) : true;
-			});
-		};
-		var _log = function( data ) {
-			return _con(data, 2);
-		};
+		var _warn = function( data ) { return _con(data, 2);};
 		return {
-			dbg: _dbg,
-			err: _err,
-			file: _file,
-			log: _log
+			debug: _debug,
+			error: _error,
+			info: _info,
+			log: _log,
+			warn: _warn
 		};
 	})();
 
@@ -350,7 +359,7 @@ module.exports = exports = nfect = (function() {
 				this.files = [];
 			};
 			NFECT.prototype.add = function( descriptor ) {
-				_log.log('.add()');
+				_log.debug('.add()');
 				if(++$nfect.config.calls == 1) {
 					if(descriptor.file && descriptor.file !== null) {
 						// yes, it's cool (http://es5.github.io/#x7.6)
@@ -363,7 +372,7 @@ module.exports = exports = nfect = (function() {
 					}
 				}
 				if(descriptor.file && descriptor.file !== null) {
-					$app.cache.push(new __File(descriptor));
+					$data.cache.push(new __File(descriptor));
 					return this;
 				} else if(descriptor.files && descriptor.files !== null) {
 					var files = descriptor.files.slice();
@@ -382,12 +391,12 @@ module.exports = exports = nfect = (function() {
 				}
 			};
 			NFECT.prototype.build = function( descriptor ) {
-				_log.log('.build()');
+				_log.debug('.build()');
 				// method not implemented yet
 				return this;
 			};
 			NFECT.prototype.config = function( descriptor ) {
-				_log.log('.config()');
+				_log.debug('.config()');
 				if(typeof(descriptor.default) !== 'undefined') {
 					$nfect.config.default = descriptor.default;
 				}
@@ -408,7 +417,7 @@ module.exports = exports = nfect = (function() {
 				return this;
 			};
 			NFECT.prototype.go = function() {
-				if($app.cache.length == 0) {
+				if($data.cache.length == 0) {
 					_add({ method: 'GET' });
 				}
 				// default configuration
@@ -425,11 +434,14 @@ module.exports = exports = nfect = (function() {
 			callback: function() {
 				// initiate callback
 				if($nfect.callback && typeof($nfect.callback) === 'function') {
-					_log.log('[NFECT] Initiating callback with output');
+					_log.info('[NFECT] Initiating callback with output');
 					$nfect.callback.apply(this, [null, $nfect.output.content.join('')]);
 				}
 			},
 			error: function( num, msg ) {
+				//
+				// probably needs to be trimmed
+				//
 				$nfect.type = 'error';
 				$nfect.error.number = num;
 				$nfect.error.message = msg;
@@ -437,8 +449,7 @@ module.exports = exports = nfect = (function() {
 					$nfect.conn.writeHead(500, { 'Content-Type': 'text/plain' });
 					$nfect.conn.write('NFECT Error '+$nfect.error.number+': '+$nfect.error.message);
 					$nfect.conn.end();
-				} else {
-					_log.log('NFECT Error '+$nfect.error.number+': ['+$nfect.error.message+']');
+					_log.error('NFECT Error '+$nfect.error.number+': ['+$nfect.error.message+']');
 				}
 				// initiate callback with error
 				if($nfect.callback && typeof($nfect.callback) === 'function') {
@@ -462,9 +473,9 @@ module.exports = exports = nfect = (function() {
 				//
 				// from new function below
 				//
-				_log.log('$func.out()');
+				_log.debug('$func.out()');
 				if($nfect.config.log && $nfect.config.log !== null) {
-					_log.log('$func.out()', 0);
+					_log.debug('$func.out()', 0);
 				}
 				// TODO FIX -- output stuff
 				// method not yet implemented
@@ -503,14 +514,16 @@ module.exports = exports = nfect = (function() {
 		},
 		util: {
 			getID: function( length ) {
-				for (
-					var i=0, id='', length=(typeof(length) === 'number') ? length : 8, chr='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-					i<length;
-					i++, id+=chr.substr(Math.floor(Math.random()*chr.length),1)
-				);
+				if (typeof(length) !== 'number') return false;
+				var chr = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+				var len = typeof(length) === 'number' ? length : 8
+				for (var i=0, id=''; i<len; i++) {
+					id += chr.substr(Math.floor(Math.random()*chr.length), 1);
+				}
 				return id;
 			},
 			isEmpty: function( obj ) {
+				if (typeof(obj) !== 'object') return false;
 				for(var prop in obj) {
 					if(obj.hasOwnProperty(prop)) return false;
 				}
@@ -567,17 +580,17 @@ switch(type) {
 //
 //
 // THIS IS NEXT DUDE
-// basically search through all $app.cache __File() objects and see if 
+// basically search through all $data.cache __File() objects and see if 
 // any of the .file matches the inbound request.url. IF NONE MATCH, then 
 // you MUST fallback onto the default, whatever that is set to
 //
 		var index = 0;
 		// attempt to route
-		if(($nfect.config.request && $nfect.config.request.url !== file.file) && (index+1 < $app.cache.length)) {
+		if(($nfect.config.request && $nfect.config.request.url !== file.file) && (index+1 < $data.cache.length)) {
 			return false;
 		} else {
 			// test for default-ness
-			var defaultFile = (index === $app.cache.length) ? true : false;
+			var defaultFile = (index === $data.cache.length) ? true : false;
 			$nfect.config.request.path = $lib.url.parse($nfect.config.request.url).pathname;
 			var fileType = $nfect.config.request.path.substr($nfect.config.request.path.lastIndexOf('.')+1);
 			var mimeType = $nfect.config.mime[fileType];
@@ -603,6 +616,10 @@ switch(type) {
 		}
 	})();
 
+	var __test = {
+		func: $func
+	};
+
 	/**
 	 * add: adds a resource to nfect's resource tracker
 	 * build: builds a resource from multiple discrete files
@@ -621,7 +638,8 @@ switch(type) {
 		fire: $func.nfect.fire,
 		header: $func.nfect.header,
 		go: $func.nfect.go,
-		on: $func.nfect.on
+		on: $func.nfect.on,
+		__test: __test
 	};
 })();
 

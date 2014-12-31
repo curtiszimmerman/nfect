@@ -12,7 +12,7 @@ module.exports = exports = __test = (function() {
 	var nfect = require('../nfect.js');
 	var expect = require('chai').expect;
 
-	describe('#NFECT', function() {
+	describe('### NFECT primary functions', function() {
 		describe('add', function() {
 			it('***STUB*** should equal true', function() {
 				expect(true).to.equal(true);
@@ -63,6 +63,21 @@ module.exports = exports = __test = (function() {
 					return true;
 				});
 				expect(nfect.fire('/unittest/on')).to.equal(true);
+			});
+		});
+	});
+
+	describe('### NFECT utility functions', function() {
+		describe('getID', function() {
+			it('should return false when given incorrect parameter type', function() {
+				var result = nfect.__test.func.util.getID(false);
+				expect(result).to.equal(false);
+			});
+		});
+		describe('isEmpty', function() {
+			it('should return false when given zero parameters', function() {
+				var result = nfect.__test.func.util.isEmpty();
+				expect(result).to.equal(false);
 			});
 		});
 	});
