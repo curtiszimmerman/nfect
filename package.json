@@ -1,6 +1,6 @@
 {
   "name": "nfect",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "The Node.js Front-End Construction Toolkit (NFECT) is a Node.js module for simple file output to HTTP clients.",
   "main": "nfect.js",
   "devDependencies": {
